@@ -18,14 +18,9 @@ userRouter.post('/sign-up', userController.createUser.bind(userController))
 
 userRouter.post('/verify-otp',userController.verifyUser.bind(userController))
 
-userRouter.post('/login', (req: Request, res: Response) => {
-    
-    const {Email, Password} = req.body
-    
-    console.log(Email, Password);
-    
-    res.status(200).json({
-        success: true})
-})
+userRouter.post('/login',userController.loginUser.bind(userController))
+
+userRouter.post('/google-login', userController.singleSignIn.bind(userController))
+
 
 export default userRouter

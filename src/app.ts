@@ -5,6 +5,7 @@ import connectDB from './db';
 import moragan from 'morgan';
 import userRouter from './routes/userRoutes';
 import sendMail from './utils/mailer';
+import venderRouter from './routes/vendorRoutes';
 
 const app: Express = express();
 
@@ -23,6 +24,7 @@ app.use(cors({
 app.use(moragan('dev'))
    
 app.use('/',userRouter)
+app.use('/vendor',venderRouter)
 
 
 app.listen(process.env.PORT, () => {

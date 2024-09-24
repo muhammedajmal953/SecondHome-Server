@@ -1,17 +1,16 @@
-import { UserDoc } from "../interfaces/IUser";
-import UserRepository from "../repositories/userRepository";
-import generateOtp from "../utils/otp";
+import { OAuth2Client } from "google-auth-library";
 import OtpRepository from "../repositories/otpRepository";
+import UserRepository from "../repositories/userRepository";
+import { UserDoc } from "../interfaces/IUser";
 import bcrypt from "bcryptjs";
+import generateOtp from "../utils/otp";
 import sendMail from "../utils/mailer";
 import { generateToken } from "../utils/jwt";
-import { OAuth2Client, TokenPayload } from "google-auth-library";
 import User from "../models/userModel";
-import { token } from "morgan";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-export class UserService {
+export class VendorService {
   constructor(
     private userRepository: UserRepository,
     private otpRepository: OtpRepository
@@ -20,7 +19,7 @@ export class UserService {
     this.otpRepository = otpRepository;
   }
 
-  async createUser(user: UserDoc) {
+  async createVendor(user: UserDoc) {
     let email = user.Email;
     const existingEmail = await this.userRepository.getUserByEmail(email);
     if (existingEmail) {
@@ -37,7 +36,7 @@ export class UserService {
 
     user.Password = bcrypt.hashSync(Password, salt);
 
-    user.Role = "User";
+    user.Role = "Vendor";
 
     const newUser = await this.userRepository.createUser(user);
     if (!newUser) {
@@ -61,11 +60,11 @@ export class UserService {
 
     return {
       success: true,
-      message: "User created successfully",
+      message: "You are now the Second Home Vendor",
     };
   }
 
-  async verifyUser(otp: string, email: string) {
+  async verifyVendor(otp: string, email: string) {
     let otpData = await this.otpRepository.getOtpByEmail(email);
     if (!otpData) {
       console.log("otp not found");
@@ -108,7 +107,7 @@ export class UserService {
     user.save();
     console.log("reach the service");
 
-    const token = await generateToken(user);
+    const token = await generateToken(user._id);
     const updateOtp = await this.otpRepository.updateOtp(email, "");
     return {
       success: true,
@@ -117,8 +116,10 @@ export class UserService {
     };
   }
 
-  async singleSignIn(idToken: string) {
+  async singleSignInVendor(idToken: string) {
     try {
+      console.log("id token vendor", idToken);
+
       const ticket = await client.verifyIdToken({
         idToken,
         audience: process.env.GOOGLE_CLIENT_ID,
@@ -153,7 +154,7 @@ export class UserService {
           First_name: given_name,
           Last_name: family_name,
           isVerified: true,
-          Role: "User",
+          Role: "Vendor",
         });
 
         await newUser.save();
@@ -166,50 +167,63 @@ export class UserService {
       }
     } catch (error) {
       console.log(error);
+      return {
+        success: false,
+        message: "Something went wrong",
+        data: null,
+      };
     }
   }
 
-  async loginUser(user: any) {
-    try { 
-        const userExist = await this.userRepository.getUserByEmail(user.Email);
+  async loginVendor(user: any) {
+    try {
+      const userExist = await this.userRepository.getUserByEmail(user.Email);
 
-        if (!userExist) {
-            console.error("User not found");
-            return {
-                success: false,
-                message: "User not found, please register",
-                data: null,
-            };
-        }
+      if (!userExist) {
+        console.error("User not found");
+        return {
+          success: false,
+          message: "User not found, please register",
+          data: null,
+        };
+      }
 
-      console.log('Logging in user:', user);
-      let values:string[]=Object.values(user)
-        console.log('Incoming password:', values[1]);
-        console.log('Saved hash:', userExist?.Password);
-        
-        const passwordMatch: boolean = bcrypt.compareSync(
-            values[1],
-            userExist?.Password
-        );
+      console.log("Logging in user:", user);
+      let values: string[] = Object.values(user);
+      console.log("Incoming password:", values[1]);
+      console.log("Saved hash:", userExist?.Password);
 
-        if (!passwordMatch) {
-            console.error("Password incorrect");
-            return {
-                success: false,
-                message: "Password incorrect",
-                data: null,
-            };
-        }
+      const passwordMatch: boolean = bcrypt.compareSync(
+        values[1],
+        userExist?.Password
+      );
 
-        if (!userExist.IsActive) {
-            return {
-                success: false,
-                message: "You are blocked by admin",
-                data: null,
-            };
-        }
+      if (!passwordMatch) {
+        console.error("Password incorrect");
+        return {
+          success: false,
+          message: "Password incorrect",
+          data: null,
+        };
+      }
 
-      if (!userExist.isVerified) { 
+      if (!userExist.IsActive) {
+        return {
+          success: false,
+          message: "You are blocked by admin",
+          data: null,
+        };
+      }
+
+      if (!userExist.IsActive) {
+        return {
+          success: false,
+          message: "You are blocked by admin",
+          data: null,
+        };
+      }
+
+      if (!userExist.isVerified) {
         return {
           success: false,
           message: "Please verify your email",
@@ -223,10 +237,10 @@ export class UserService {
           data: null,
         };
       }
-      if (userExist.Role !== "User") {
+      if (userExist.Role !== "Vendor") {
         return {
           success: false,
-          message: "Only user can login",
+          message: "Only vendor can login",
           data: null,
         };
       }
@@ -240,10 +254,9 @@ export class UserService {
       console.error("Error during login:", error);
       return {
         success: false,
-        message: 'sever error please try again later',
+        message: "sever error please try again later",
         data: null,
-      }
+      };
     }
-}
-
+  }
 }

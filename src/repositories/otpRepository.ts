@@ -14,8 +14,8 @@ class OtpRepository {
         return otpModel.findOne({ Email: email })
     }
 
-    updateOtp(otp: OtpDoc): Promise<OtpDoc | null> {
-        return otpModel.findOneAndUpdate({ Email: otp.Email }, otp, { new: true })
+    updateOtp(email: string,otp:string): Promise<OtpDoc | null> {
+        return otpModel.findOneAndUpdate({ Email: email },{Otp:otp}) 
     }
 }
 
