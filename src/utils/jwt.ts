@@ -9,13 +9,12 @@ export const generateToken = (payload: any) => {
     return  jwt.sign({payload:payload}, secret, { expiresIn: "1d" });
 };
 
-const generateRefreshToken = (payload: any) => {
+export const generateRefreshToken = (payload: any) => {
     return  jwt.sign({payload:payload}, secret, { expiresIn: "7d" });
 };
 
-const verifyToken = (token: string) => {
+export const verifyToken = (token: string) => {
     return  jwt.verify(token, secret);
 }
 
 
-module.exports= {verifyToken, generateToken, generateRefreshToken }

@@ -1,6 +1,7 @@
 import { Document } from "mongoose";
 
 export interface UserDoc extends Document {
+ 
   First_name: string;
   Last_name: string;
   Email: string;

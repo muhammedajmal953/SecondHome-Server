@@ -1,5 +1,5 @@
 import UserRepository from "../repositories/userRepository";
-import { generateToken } from "../utils/jwt";
+import { generateToken, verifyToken } from "../utils/jwt";
 import bcrypt from "bcryptjs";
 
 
@@ -7,6 +7,8 @@ export class AdminServices{
     constructor(private userRepository: UserRepository){}
     async loginUser(admin: any) {
         try { 
+           
+            
             const adminExist = await this.userRepository.getUserByEmail(admin.Email);
     
             if (!adminExist) {
@@ -59,6 +61,58 @@ export class AdminServices{
             message: 'sever error please try again later',
             data: null,
           }
+        }
+    }
+
+  async  getAllUsers() {
+      let users = await this.userRepository.getUsers()
+      
+      
+        return {
+            success: true,
+            message: "Users fetched successfully",
+            data: users,
+        }
+    }
+
+    async blockUser(token: string) {
+        
+        
+        let user = await this.userRepository.getUserById(token)
+        
+        if(!user){
+            return {
+                success: false,
+                message: "User not found",
+                data: null,
+            }
+        }
+
+        user.IsActive = false
+        await user.save()
+        return {
+            success: true,
+            message: "User blocked successfully",
+            data: null,
+        }
+    }
+    async unBlockUser(token: string) {
+        let user = await this.userRepository.getUserById(token)
+        
+        if(!user){
+            return {
+                success: false,
+                message: "User not found",
+                data: null,
+            }
+        }
+
+        user.IsActive = true
+        await user.save()
+        return {
+            success: true,
+            message: "User blocked successfully",
+            data: null,
         }
     }
 }

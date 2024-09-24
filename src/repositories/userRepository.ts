@@ -9,6 +9,9 @@ class UserRepository {
         return newUser.save();
     }
     
+    async getUsers(): Promise<any[]> {
+        return User.find({IsAdmin: false});
+    }
     async getUserByEmail(email:String): Promise<UserDoc | null> {
         return User.findOne({ Email: email });
     }
@@ -16,7 +19,10 @@ class UserRepository {
     async getUserById(id: String): Promise<UserDoc | null> {
         return User.findById(id);
     }
-
+    
+    async updateUser(id:string,updates:UserDoc): Promise<UserDoc | null> {
+        return User.findByIdAndUpdate({_id:id},{$set:updates},{new:true});
+    }
     
 }
 

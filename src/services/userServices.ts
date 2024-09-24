@@ -172,7 +172,7 @@ export class UserService {
   async loginUser(user: any) {
     try { 
         const userExist = await this.userRepository.getUserByEmail(user.Email);
-
+        
         if (!userExist) {
             console.error("User not found");
             return {
