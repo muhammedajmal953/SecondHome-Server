@@ -7,6 +7,7 @@ import generateOtp from "../utils/otp";
 import sendMail from "../utils/mailer";
 import { generateToken } from "../utils/jwt";
 import User from "../models/userModel";
+import { uploadToS3 } from "../utils/s3Bucket";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -56,6 +57,7 @@ export class VendorService {
       Otp: newOtp,
       CreatedAt: new Date(),
       ExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      isUpdated: false,
     });
 
     return {
@@ -259,4 +261,170 @@ export class VendorService {
       };
     }
   }
+
+  async forgotPassword(email: string) {
+    try {
+      console.log('before user service');
+      
+      let user = await this.userRepository.getUserByEmail( email );
+      console.log('email at forgot service', email);
+      
+       
+      if (!user) {
+        return {
+          success: false,
+          message: "Your email is not registered",
+          data: null,
+        }
+      }
+
+      if (user.Role!=="Vendor") {
+        return {
+          success: false,
+          message: "Please Enter a Vendor Email",
+          data: null,
+        }
+      }
+    
+      const newOtp = generateOtp();
+      sendMail('secondHome', "Forgot Password", user.Email, newOtp);
+      const updateOtp = await this.otpRepository.updateOtp(email, newOtp);
+      
+      console.log(newOtp,'the forgot password otp');
+      
+      return {
+        success: true,
+        message: "Otp sent to your email successfully",
+        data: null,
+      }
+    
+    } catch (error) {
+      console.error(error);
+      return {
+        success: false,
+        message: 'sever error please try again later',
+        data: null,
+      }
+      
+    }
+  }
+ 
+  async changePasswordVendor(email: string, password: string) {
+    try {
+      const salt = bcrypt.genSaltSync(10);
+
+      const hashedPassword = bcrypt.hashSync(password, salt);
+  
+      const user = await this.userRepository.updateUserByEmail(email, { Password: hashedPassword });
+      
+      if (!user) {
+        return {
+          success: false,
+          message: "Something went wrong",
+          data: null,
+        };
+      }
+      return {
+        success: true,
+        message: "Password changed successfully",
+        data: null,
+      };
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+
+async forgotOtpHandler(email: string, otp: string) {
+    
+    try {
+      let otpData = await this.otpRepository.getOtpByEmail(email);
+      if (!otpData) {
+        console.log("otp not found");
+        return {
+          success: false,
+          message: "Something went wrong",
+          data: null,
+        };
+      } 
+   
+      if (otpData.ExpiresAt < new Date()) { 
+        console.log("otp expired");
+        return {
+          success: false,
+          message: "OTP expired",
+          data: null,
+        };
+      } if (otpData.Otp !== otp) {
+        console.log("invalid otp");
+        return {
+          success: false,
+          message: "Invalid OTP",
+          data: null,
+        }
+      }
+   
+      return {
+        success: true,
+        message: "OTP verified",
+        data: null,
+      }
+    } catch (error) {
+      console.log(error);
+      return {
+        success: false,
+        message: "Something went wrong",
+        data: null,
+      }
+    }
+
+  }
+
+  async kycUpload(file: any) {
+    try {
+      if (!file) {
+        return {
+          success: false,
+          message: "Something went wrong",
+          data: null,
+        }
+      }
+
+      const bucketName = process.env.AWS_S3_BUCKET_NAME!;
+      
+      const key = `upload/${Date.now()}-${file.originalname}`;
+
+      const fileBuffer = file.buffer;
+
+      const mimetype = file.mimetype;
+
+      const imageUrl= await uploadToS3(bucketName, key, fileBuffer, mimetype);
+
+      if (!imageUrl) {
+        return {
+          success: false,
+          message: "Image Upload Failed",
+          data: null,
+        }
+      }
+
+      await this.userRepository.uploadKyc(file.fieldname, imageUrl);
+      
+      return {
+        success: true,
+        message: "Image Upload Successful",
+        data: imageUrl,
+      }
+
+      
+    } catch (error) {
+      return {
+        success: false,
+        message: "Something went wrong",
+        data: null,
+      }
+    }
+  }
+
+     
 }

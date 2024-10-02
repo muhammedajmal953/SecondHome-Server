@@ -64,8 +64,11 @@ export class AdminServices{
         }
     }
 
-  async  getAllUsers() {
-      let users = await this.userRepository.getUsers()
+    async getAllUsers(page: number, limit: number) {
+      
+      let newLimit=limit*(page-1)
+
+      let users = await this.userRepository.getUsers(newLimit)
       
       
         return {
@@ -74,7 +77,20 @@ export class AdminServices{
             data: users,
         }
     }
+    async getAllVendors(page: number, limit: number) {
+      
+      let newLimit=limit*(page-1)
 
+      let users = await this.userRepository.getVendors(newLimit)
+      
+      
+        return {
+            success: true,
+            message: "Users fetched successfully",
+            data: users,
+        }
+    }
+    
     async blockUser(token: string) {
         
         

@@ -12,6 +12,7 @@ const userController = new UserController(userService);
 
 
 
+
 const userRouter = Router();
 
 
@@ -24,5 +25,8 @@ userRouter.post('/login',userController.loginUser.bind(userController))
 
 userRouter.post('/google-login', userController.singleSignIn.bind(userController))
 
+userRouter.post('/forgot-password', userController.forgotPassword.bind(userController))
+userRouter.post('/change-password', userController.changePassword.bind(userController))
 
+ 
 export default userRouter

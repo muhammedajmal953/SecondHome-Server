@@ -5,4 +5,5 @@ export interface OtpDoc{
     Otp: string
     CreatedAt: Date
     ExpiresAt: Date
+    isUpdated: boolean
 } 

@@ -9,19 +9,29 @@ class UserRepository {
         return newUser.save();
     }
     
-    async getUsers(): Promise<any[]> {
-        return User.find({IsAdmin: false});
+    async getUsers(limit:number): Promise<any[]> {
+        return User.find({IsAdmin: false,Role:'User'}).skip(limit).limit(5);
     }
-    async getUserByEmail(email:String): Promise<UserDoc | null> {
-        return User.findOne({ Email: email });
+    async getVendors(limit:number): Promise<any[]> {
+        return User.find({IsAdmin: false,Role:'Vendor'}).skip(limit).limit(5);
+    }
+    async getUserByEmail(email:string): Promise<UserDoc | null> {
+        return User.findOne({ Email: email }); 
     }
 
     async getUserById(id: String): Promise<UserDoc | null> {
         return User.findById(id);
     }
     
-    async updateUser(id:string,updates:UserDoc): Promise<UserDoc | null> {
+    async updateUser(id:string,updates:any): Promise<UserDoc | null> {
         return User.findByIdAndUpdate({_id:id},{$set:updates},{new:true});
+    }
+    async updateUserByEmail(email:string,updates:any): Promise<UserDoc | null> {
+        return User.findOneAndUpdate({Email:email},{$set:updates},{new:true});
+    }
+
+    async uploadKyc(id:string,file:string): Promise<UserDoc | null> {
+        return User.findByIdAndUpdate({_id:id},{$set:{KYC:file}},{new:true});
     }
     
 }

@@ -32,6 +32,10 @@ const userSchema = new Schema<UserDoc>({
     isVerified: {
         type: Boolean,
         default: false
+    },
+    isKYCVerified: {
+        type: Boolean,
+        default:false,
     }
 });
 

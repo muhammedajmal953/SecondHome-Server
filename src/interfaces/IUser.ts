@@ -1,6 +1,6 @@
 import { Document } from "mongoose";
 
-export interface UserDoc extends Document {
+export interface UserDoc  extends Document{
  
   First_name: string;
   Last_name: string;
@@ -15,5 +15,6 @@ export interface UserDoc extends Document {
   UpdatedAt: Date 
   Avatar: string 
   IsActive: boolean 
-  Gender: 'Male'|'Female'|'Others';
+  Gender: 'Male' | 'Female' | 'Others';
+  isKYCVerified:boolean
 }

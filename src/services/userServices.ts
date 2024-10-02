@@ -57,6 +57,7 @@ export class UserService {
       Otp: newOtp,
       CreatedAt: new Date(),
       ExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      isUpdated: false,
     });
 
     return {
@@ -199,17 +200,9 @@ export class UserService {
                 message: "Password incorrect",
                 data: null,
             };
-        }
-
-        if (!userExist.IsActive) {
-            return {
-                success: false,
-                message: "You are blocked by admin",
-                data: null,
-            };
-        }
-
-      if (!userExist.isVerified) { 
+      }
+      
+      if (userExist.isVerified===false) { 
         return {
           success: false,
           message: "Please verify your email",
@@ -245,5 +238,107 @@ export class UserService {
       }
     }
 }
+  async forgotPassword(email: string) {
+    try {
+      console.log('before user service');
+      
+      let user = await this.userRepository.getUserByEmail( email );
+      console.log('email at forgot service', email);
+      
+       
+      if (!user) {
+        return {
+          success: false,
+          message: "Your email is not registered",
+          data: null,
+        }
+      }
+    
+      const newOtp = generateOtp();
+      sendMail('secondHome', "Forgot Password", user.Email, newOtp);
+      const updateOtp = await this.otpRepository.updateOtp(email, newOtp);
+      
+      console.log(newOtp,'the forgot password otp');
+      
+      return {
+        success: true,
+        message: "Otp sent to your email successfully",
+        data: null,
+      }
+    
+    } catch (error) {
+      console.error(error);
+      return {
+        success: false,
+        message: 'sever error please try again later',
+        data: null,
+      }
+      
+    }
+  }
 
+ async forgotOtpHandle(email:string,otp:string) {
+   try {
+    let otpData = await this.otpRepository.getOtpByEmail(email);
+    if (!otpData) {
+      console.log("otp not found");
+      return {
+        success: false,
+        message: "Something went wrong",
+        data: null,
+      };
+    } 
+ 
+    if (otpData.ExpiresAt < new Date()) { 
+      console.log("otp expired");
+      return {
+        success: false,
+        message: "OTP expired",
+        data: null,
+      };
+    } if (otpData.Otp !== otp) {
+      console.log("invalid otp");
+      return {
+        success: false,
+        message: "Invalid OTP",
+        data: null,
+      }
+    }
+ 
+    return {
+      success: true,
+      message: "OTP verified",
+      data: null,
+    }
+   } catch (error) {
+     console.log(error);
+   }
+  }
+
+  async changePassword(email: string, password: string) {
+    try {
+      const salt = bcrypt.genSaltSync(10);
+
+      const hashedPassword = bcrypt.hashSync(password, salt);
+  
+      const user = await this.userRepository.updateUserByEmail(email, { Password: hashedPassword });
+      
+      if (!user) {
+        return {
+          success: false,
+          message: "Something went wrong",
+          data: null,
+        };
+      }
+      return {
+        success: true,
+        message: "Password changed successfully",
+        data: null,
+      };
+    
+    } catch (error) {
+      console.log(error);
+      
+    } 
+  }
 }

@@ -8,7 +8,11 @@ const OTP = new Schema<OtpDoc>({
     Email: String,
     Otp: String,
     CreatedAt: Date,
-    ExpiresAt: Date
+    ExpiresAt: Date,
+    isUpdated: {
+        type: Boolean,
+        default: false
+    }
 })
 
 
