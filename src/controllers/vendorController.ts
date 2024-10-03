@@ -84,13 +84,18 @@ class VendorController {
 
     async kycUpload(req: Request, res: Response) { 
         try {
-            let result =await this.vendorService.kycUpload(req.body)
+            if (!req.file) {
+                return res.status(400).json({ success: false, message: 'File not found' })
+             }
+            
+            let result =await this.vendorService.kycUpload(req.file)
             return res.status(200).json(result)
         } catch (error) {
+            console.error(error);
             return res.status(500).json({ success: false, message: error })
         }
     }
   
 }
 
-export default VendorController
+export default VendorController 

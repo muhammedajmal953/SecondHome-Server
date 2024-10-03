@@ -8,6 +8,7 @@ import sendMail from "../utils/mailer";
 import { generateToken } from "../utils/jwt";
 import User from "../models/userModel";
 import { uploadToS3 } from "../utils/s3Bucket";
+import { readFileSync } from "fs";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -380,8 +381,9 @@ async forgotOtpHandler(email: string, otp: string) {
 
   }
 
-  async kycUpload(file: any) {
+  async kycUpload(file: Express.Multer.File) {
     try {
+      
       if (!file) {
         return {
           success: false,
@@ -394,11 +396,13 @@ async forgotOtpHandler(email: string, otp: string) {
       
       const key = `upload/${Date.now()}-${file.originalname}`;
 
-      const fileBuffer = file.buffer;
+      const fileBuffer = file.buffer
 
       const mimetype = file.mimetype;
 
-      const imageUrl= await uploadToS3(bucketName, key, fileBuffer, mimetype);
+      const imageUrl = await uploadToS3(bucketName, key, fileBuffer, mimetype);
+      
+      
 
       if (!imageUrl) {
         return {
@@ -407,8 +411,8 @@ async forgotOtpHandler(email: string, otp: string) {
           data: null,
         }
       }
-
-      await this.userRepository.uploadKyc(file.fieldname, imageUrl);
+        
+    
       
       return {
         success: true,
@@ -418,6 +422,8 @@ async forgotOtpHandler(email: string, otp: string) {
 
       
     } catch (error) {
+      console.log(error);
+      
       return {
         success: false,
         message: "Something went wrong",

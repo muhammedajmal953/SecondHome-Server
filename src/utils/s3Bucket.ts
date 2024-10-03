@@ -1,4 +1,5 @@
-import { S3Client,PutObjectCommand,PutObjectCommandInput } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, PutObjectCommandInput } from "@aws-sdk/client-s3";
+import {Upload} from "@aws-sdk/lib-storage";
 
 
 
@@ -18,21 +19,37 @@ export const uploadToS3 = async (
     fileBuffer: Buffer,
     mimetype: string
 ) => {
-    const uploadParams:PutObjectCommandInput = {
+    const parallelUploadOptions = {
+        queueSize: 4,
+        partSize: 10 * 1024 * 1024,
+    };
+
+   
+    
+
+    const uploadParams = {
         Bucket: bucketName,
         Key: key,
         Body: fileBuffer,
-        ContentType: mimetype
-    }
-    try {
-        const command = new PutObjectCommand(uploadParams);
-        const response = await s3Client.send(command);
-        
+        ContentType: mimetype,
+    };
 
+    try {
+        const upload = new Upload({
+            client: s3Client,
+            params: uploadParams,
+            queueSize: parallelUploadOptions.queueSize,
+            partSize: parallelUploadOptions.partSize,
+        });
+
+        const response = await upload.done();
+        
         const fileUrl = `https://${bucketName}.s3.amazonaws.com/${key}`;
         return fileUrl
     } catch (error) {
-        console.error("error uploading to s3",error);
+        console.error("error uploading to s3", error);
+        throw error
     }
 }
+
 

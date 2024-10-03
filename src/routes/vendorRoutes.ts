@@ -23,7 +23,6 @@ venderRouter.post('/forgot-password', vendorController.forgotPasswordVendor.bind
 
 venderRouter.post('/change-password', vendorController.changePasswordVendor.bind(vendorController))
 
-venderRouter.post('/kycUpload', upload.single('file'),vendorController.kycUpload.bind(vendorController))
-
+venderRouter.post('/kycUpload', upload.single('license'),vendorController.kycUpload.bind(vendorController))
 
 export default venderRouter
