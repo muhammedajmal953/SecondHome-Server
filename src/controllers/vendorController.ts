@@ -23,7 +23,10 @@ class VendorController {
     async verifyVendor(req: Request, res: Response) {
         const { otp, email } = req.body
         const registeredUser = await userRepository.getUserByEmail(email);
-      
+       
+
+        console.log('otp and email', otp, email);
+        
       if (registeredUser&&registeredUser.isVerified===true) {
           const result= await this.vendorService.forgotOtpHandler(email,otp);
           return res.status(200).json(result);
@@ -63,7 +66,7 @@ class VendorController {
             const { email } = req.body
             console.log(email,'dfdfdf');
             
-            const result = await this.vendorService.forgotPassword(email)
+            const result = await this.vendorService.forgotPassword(email.Email)
             return res.status(200).json(result)
         } catch (error) {
             console.error(error)
@@ -84,17 +87,42 @@ class VendorController {
 
     async kycUpload(req: Request, res: Response) { 
         try {
+            console.log(req.body,'servise that builed for kyc upload');
+            console.log(req.file,'servise that builed for kyc upload');
             if (!req.file) {
                 return res.status(400).json({ success: false, message: 'File not found' })
              }
             
-            let result =await this.vendorService.kycUpload(req.file)
+            let result =await this.vendorService.kycUpload(req.body.email,req.file)
             return res.status(200).json(result)
         } catch (error) {
             console.error(error);
             return res.status(500).json({ success: false, message: error })
         }
     }
+
+    async getVendorDetails(req: Request, res: Response) { 
+        try {
+            console.log("token get vendor token", req.headers.authorization!);
+            let bearer = req.headers.authorization!
+            let token=bearer.split(' ')[1]
+            
+            console.log("token get vendor token", token);
+ 
+            if (!token) {
+                console.log("token not found");
+                
+                return res.status(400).json({ success: false, message: 'Token not found' })
+            }
+            
+            const result = await this.vendorService.getVendorDtails(token)
+            return res.status(200).json(result)
+        } catch (error) {
+            return res.status(500).json({ success: false, message: error })
+        }
+    }
+
+    
   
 }
 

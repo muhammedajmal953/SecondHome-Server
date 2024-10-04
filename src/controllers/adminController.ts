@@ -100,4 +100,22 @@ export class AdminController {
             return res.status(500).json({ success: false, message: 'Internal server error' });
         }
     }
+
+
+
+
+
+    async verifyVendor(req: Request, res: Response) {
+        const { id } = req.body
+            
+        try {
+            if (!id) {
+                return res.status(400).json({ success: false, message: 'Id is required' })
+            }
+            const result = await this.adminService.verifyVendor(id)
+            return res.status(200).json(result)
+        } catch (error) {
+            return res.status(500).json({ success: false, message: 'Internal server error' })
+        }
+    }
 }

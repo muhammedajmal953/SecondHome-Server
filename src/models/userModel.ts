@@ -36,7 +36,8 @@ const userSchema = new Schema<UserDoc>({
     isKYCVerified: {
         type: Boolean,
         default:false,
-    }
+    },
+    lisence: String
 });
 
 const User = mongoose.model<UserDoc>('User', userSchema);

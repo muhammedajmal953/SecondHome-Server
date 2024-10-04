@@ -10,7 +10,6 @@ class OtpRepository {
 
     getOtpByEmail(email: string): Promise<OtpDoc | null> {
         console.log('reach the repo');
-        
         return otpModel.findOne({ Email: email })
     }
 

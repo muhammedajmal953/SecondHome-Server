@@ -4,7 +4,7 @@ import generateOtp from "../utils/otp";
 import OtpRepository from "../repositories/otpRepository";
 import bcrypt from "bcryptjs";
 import sendMail from "../utils/mailer";
-import { generateToken } from "../utils/jwt";
+import { generateToken, verifyToken } from "../utils/jwt";
 import { OAuth2Client, TokenPayload } from "google-auth-library";
 import User from "../models/userModel";
 import { token } from "morgan";
@@ -340,5 +340,14 @@ export class UserService {
       console.log(error);
       
     } 
+  }
+  getUser(token: string) {
+    try {
+      const decodedToken = verifyToken(token);
+      console.log(decodedToken);
+      
+    } catch (error) {
+      console.log(error);
+    }
   }
 }

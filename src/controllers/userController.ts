@@ -87,6 +87,18 @@ class UserController {
       return res.status(500).json({ success: false, message: error });
     }
   }
+
+  async getUser(req: Request, res: Response) {
+    try {
+      let token = req.headers.authorization!
+      console.log("token get user token", token);
+      
+      const result = await this.userService.getUser(token);
+      return res.status(200).json(result);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }
 
 export default UserController;

@@ -131,4 +131,30 @@ export class AdminServices{
             data: null,
         }
     }
+
+    async verifyVendor(_id: string) {
+        try {
+            let verification = await this.userRepository.verifyKYC(_id)
+
+            if (!verification) { 
+              
+                return {
+                    success: false,
+                    message: "User not found",
+                    data: null,
+                }
+            }
+            
+            return {
+                success: true,
+                message: "User verified successfully",
+                data: verification,
+            }
+        } catch (error) {
+            
+        }
+
+    }
+
+      
 }

@@ -16,5 +16,6 @@ export interface UserDoc  extends Document{
   Avatar: string 
   IsActive: boolean 
   Gender: 'Male' | 'Female' | 'Others';
-  isKYCVerified:boolean
+  isKYCVerified: boolean
+  lisence: string
 }

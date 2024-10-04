@@ -5,10 +5,11 @@ import { UserDoc } from "../interfaces/IUser";
 import bcrypt from "bcryptjs";
 import generateOtp from "../utils/otp";
 import sendMail from "../utils/mailer";
-import { generateToken } from "../utils/jwt";
+import { generateToken, verifyToken } from "../utils/jwt";
 import User from "../models/userModel";
 import { uploadToS3 } from "../utils/s3Bucket";
 import { readFileSync } from "fs";
+import { log } from "console";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -381,8 +382,9 @@ async forgotOtpHandler(email: string, otp: string) {
 
   }
 
-  async kycUpload(file: Express.Multer.File) {
+  async kycUpload(email:string,file: Express.Multer.File) {
     try {
+      console.log(file,'servise that builed for kyc upload');
       
       if (!file) {
         return {
@@ -410,10 +412,19 @@ async forgotOtpHandler(email: string, otp: string) {
           message: "Image Upload Failed",
           data: null,
         }
-      }
-        
-    
+      }  
+
+      log(`Image uploaded successfully: ${imageUrl}`);
+      let result = await this.userRepository.uploadKyc(email, imageUrl);
       
+      if (!result) {
+        return {
+          success: false,
+          message: "Something went wrong",
+          data: null,
+        }
+      }
+       
       return {
         success: true,
         message: "Image Upload Successful",
@@ -432,5 +443,30 @@ async forgotOtpHandler(email: string, otp: string) {
     }
   }
 
+  async getVendorDtails(token: string) { 
+    try {
+      let payload = verifyToken(token);
+      console.log(payload,'payload');
+
+      let id=JSON.parse(JSON.stringify(payload)).payload;
+
+      let user = await this.userRepository.getUserById(id);
+      
+      return {
+        success: true,
+        message: "User details fetched successfully",
+        data: user,
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      return {
+        success: false,
+        message: "An error occurred while fetching user details",
+        data: null,
+      };
+    }
+  }
+
      
 }
+ 

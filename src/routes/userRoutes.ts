@@ -28,5 +28,7 @@ userRouter.post('/google-login', userController.singleSignIn.bind(userController
 userRouter.post('/forgot-password', userController.forgotPassword.bind(userController))
 userRouter.post('/change-password', userController.changePassword.bind(userController))
 
- 
+userRouter.get('/getUser',userController.getUser.bind(userController))
+
+
 export default userRouter

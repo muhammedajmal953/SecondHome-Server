@@ -15,4 +15,6 @@ adminRouter.put('/unBlockUser', adminController.unBlockUser.bind(adminController
 
 adminRouter.get('/getAllVendors/:page/:limit',adminController.getAllVendors.bind(adminController))
 
+adminRouter.put('/verifyVendor',adminController.verifyVendor.bind(adminController))
+
 export default adminRouter

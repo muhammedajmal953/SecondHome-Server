@@ -30,8 +30,12 @@ class UserRepository {
         return User.findOneAndUpdate({Email:email},{$set:updates},{new:true});
     }
 
-    async uploadKyc(id:string,file:string): Promise<UserDoc | null> {
-        return User.findByIdAndUpdate({_id:id},{$set:{KYC:file}},{new:true});
+    async uploadKyc(email:string,file:string): Promise<UserDoc | null> {
+        return User.findOneAndUpdate({Email:email},{$set:{lisence:file}},{new:true});
+    }
+
+    async verifyKYC(id:string): Promise<UserDoc | null> {
+        return User.findByIdAndUpdate({_id:id},{$set:{isKYCVerified:true}},{new:true});
     }
     
 }
