@@ -86,17 +86,50 @@ class UserController {
       console.log(error);
       return res.status(500).json({ success: false, message: error });
     }
-  }
+  } 
 
   async getUser(req: Request, res: Response) {
     try {
-      let token = req.headers.authorization!
-      console.log("token get user token", token);
-      
+      let token = req.headers.authorization!;
+
+       token = token.split(" ")[1];
+
+
       const result = await this.userService.getUser(token);
       return res.status(200).json(result);
     } catch (error) {
       console.log(error);
+    }
+  }
+
+  async editProfile(req: Request, res: Response) {
+    try {
+      let bearer = req.headers.authorization!;
+      let token = bearer.split(" ")[1];
+
+      let data = req.body;
+
+      console.log('asdfasdf',req.body);
+      
+
+      let file: Express.Multer.File;
+      if (req.file) {
+        file = req.file;   
+      } 
+
+      if (!token) {
+        console.log("token not found"); 
+
+        return res
+          .status(400)
+          .json({ success: false, message: "Token not found" });
+      }
+
+      let result = await this.userService.editProfile(token, data, file!);
+      return res.status(200).json(result);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ success: false, message: error });
     }
   }
 }

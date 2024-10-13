@@ -444,9 +444,9 @@ async forgotOtpHandler(email: string, otp: string) {
   }
 
   async getVendorDtails(token: string) { 
-    try {
+    try { 
       let payload = verifyToken(token);
-      console.log(payload,'payload');
+     
 
       let id=JSON.parse(JSON.stringify(payload)).payload;
 
@@ -456,7 +456,7 @@ async forgotOtpHandler(email: string, otp: string) {
         success: true,
         message: "User details fetched successfully",
         data: user,
-      }
+      }  
     } catch (error) {
       console.error("Error fetching user details:", error);
       return {
@@ -467,6 +467,48 @@ async forgotOtpHandler(email: string, otp: string) {
     }
   }
 
+  async editProfile(token: string,updates:any,file:Express.Multer.File) {
+    try {
+
+      let payload = verifyToken(token);
+    
+      let id = JSON.parse(JSON.stringify(payload)).payload;
+
+      if (file) {
+        const bucketName = process.env.AWS_S3_BUCKET_NAME!;
+        const key = `upload/${Date.now()}-${file.originalname}`;
+        const fileBuffer = file.buffer;
+        const mimetype = file.mimetype;
+        const imageUrl = await uploadToS3(bucketName, key, fileBuffer, mimetype);
+        updates = {...updates,Avatar:imageUrl}
+      }
+      
+      let result = await this.userRepository.updateUser(id, updates);
+      
+
+      if (!result) {
+        return {
+          success: false,
+          message: "Something went wrong",
+          data: null,
+        }
+      }
+      
+      return {
+        success: true,
+        message: "Profile updated successfully",
+        data: result, 
+      } 
+    } catch (error) {
+      console.log(error);
+       
+      return {
+        success: false,
+        message: error,
+        data: null,
+      }
+    }
+  }
      
 }
  

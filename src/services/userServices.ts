@@ -8,6 +8,7 @@ import { generateToken, verifyToken } from "../utils/jwt";
 import { OAuth2Client, TokenPayload } from "google-auth-library";
 import User from "../models/userModel";
 import { token } from "morgan";
+import { uploadToS3 } from "../utils/s3Bucket";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -341,13 +342,85 @@ export class UserService {
       
     } 
   }
-  getUser(token: string) {
-    try {
-      const decodedToken = verifyToken(token);
-      console.log(decodedToken);
+  async getUser(token: string) {
+    try { 
+      console.log('getUser');
+      let payload = verifyToken(token);
       
+      
+      
+
+      let id=JSON.parse(JSON.stringify(payload)).payload;
+
+      let user = await this.userRepository.getUserById(id);
+      
+      return {
+        success: true,
+        message: "User details fetched successfully",
+        data: user,
+      }  
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      return {
+        success: false,
+        message: "An error occurred while fetching user details",
+        data: null,
+      };
+    }
+  }
+
+  async editProfile(token: string,updates:any,file:Express.Multer.File) {
+    try {
+
+      let payload = verifyToken(token);
+
+    
+      
+      
+    
+      let id = JSON.parse(JSON.stringify(payload)).payload;
+
+      console.log('user edit payload',id._id);
+      
+
+      
+
+      if (file) {
+        const bucketName = process.env.AWS_S3_BUCKET_NAME!;
+        const key = `upload/${Date.now()}-${file.originalname}`;
+        const fileBuffer = file.buffer;
+        const mimetype = file.mimetype;
+        const imageUrl = await uploadToS3(bucketName, key, fileBuffer, mimetype);
+        updates = {...updates,Avatar:imageUrl}
+      }
+
+      console.log(updates);
+      
+      
+      let result = await this.userRepository.updateUser(id._id, updates);
+      
+
+      if (!result) {
+        return {
+          success: false,
+          message: "Something went wrong",
+          data: null,
+        }
+      }
+      
+      return {
+        success: true,
+        message: "Profile updated successfully",
+        data: result, 
+      } 
     } catch (error) {
       console.log(error);
+       
+      return {
+        success: false,
+        message: error,
+        data: null,
+      }
     }
   }
 }

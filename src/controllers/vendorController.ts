@@ -87,8 +87,7 @@ class VendorController {
 
     async kycUpload(req: Request, res: Response) { 
         try {
-            console.log(req.body,'servise that builed for kyc upload');
-            console.log(req.file,'servise that builed for kyc upload');
+          
             if (!req.file) {
                 return res.status(400).json({ success: false, message: 'File not found' })
              }
@@ -103,12 +102,9 @@ class VendorController {
 
     async getVendorDetails(req: Request, res: Response) { 
         try {
-            console.log("token get vendor token", req.headers.authorization!);
             let bearer = req.headers.authorization!
             let token=bearer.split(' ')[1]
-            
-            console.log("token get vendor token", token);
- 
+        
             if (!token) {
                 console.log("token not found");
                 
@@ -121,6 +117,34 @@ class VendorController {
             return res.status(500).json({ success: false, message: error })
         }
     }
+
+    async editProfile(req: Request, res: Response) {
+        try {
+        
+            let bearer = req.headers.authorization!
+            let token=bearer.split(' ')[1]
+            
+            
+            let data = req.body
+
+            let file: Express.Multer.File 
+            if(req.file){
+                file=req.file
+            }
+ 
+            if (!token) {
+                console.log("token not found");
+                
+                return res.status(400).json({ success: false, message: 'Token not found' })
+            }
+
+            let result =await this.vendorService.editProfile(token,data,file!)  
+            return res.status(200).json(result)
+        } catch (error) { 
+            console.error(error);
+            return res.status(500).json({ success: false, message: error })
+        }  
+    } 
 
     
   

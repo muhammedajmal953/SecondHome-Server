@@ -1,8 +1,12 @@
-import { Request, Response, Router } from "express";
+import { Router } from "express";
 import UserController from "../controllers/userController";
 import UserRepository from "../repositories/userRepository";
 import {UserService} from "../services/userServices";
 import OtpRepository from "../repositories/otpRepository";
+import { upload } from "../utils/multer";
+import { HostelRepository } from "../repositories/hostelRepository";
+import { HostelService } from "../services/hostelService";
+import { HostelController } from "../controllers/hostelController";
 
 const userRepository = new UserRepository();
 const otpRepository = new OtpRepository();
@@ -28,7 +32,12 @@ userRouter.post('/google-login', userController.singleSignIn.bind(userController
 userRouter.post('/forgot-password', userController.forgotPassword.bind(userController))
 userRouter.post('/change-password', userController.changePassword.bind(userController))
 
-userRouter.get('/getUser',userController.getUser.bind(userController))
+userRouter.get('/getUser', userController.getUser.bind(userController))
+
+userRouter.put('/edit-profile', upload.single('avatar'), userController.editProfile.bind(userController))
 
 
-export default userRouter
+
+ 
+
+export default userRouter 

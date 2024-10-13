@@ -37,7 +37,7 @@ class UserRepository {
     async verifyKYC(id:string): Promise<UserDoc | null> {
         return User.findByIdAndUpdate({_id:id},{$set:{isKYCVerified:true}},{new:true});
     }
-    
+     
 }
 
 export default UserRepository

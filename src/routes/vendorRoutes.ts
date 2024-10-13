@@ -4,12 +4,19 @@ import { VendorService } from '../services/vendorServices';
 import OtpRepository from '../repositories/otpRepository';
 import UserRepository from '../repositories/userRepository';
 import { upload } from '../utils/multer';
+import { HostelRepository } from '../repositories/hostelRepository';
+import { HostelService } from '../services/hostelService';
+import { HostelController } from '../controllers/hostelController';
 
 const venderRouter = Router();
 const otpRepository = new OtpRepository();
 const userRepository = new UserRepository();
 const venderService = new VendorService(userRepository,otpRepository);
 const vendorController = new VendorController(venderService);
+const hostelRepository = new HostelRepository();
+const hostelService = new HostelService(hostelRepository);
+const hostelController = new HostelController(hostelService);   
+
 
 venderRouter.post('/sign-up', vendorController.createVendor.bind(vendorController))
 
@@ -26,5 +33,10 @@ venderRouter.post('/change-password', vendorController.changePasswordVendor.bind
 venderRouter.put('/kycUpload', upload.single('license'), vendorController.kycUpload.bind(vendorController))
 
 venderRouter.get('/vendorDetails', vendorController.getVendorDetails.bind(vendorController))
+  
+venderRouter.put('/edit-profile', upload.single('avatar'), vendorController.editProfile.bind(vendorController))
+
+venderRouter.post('/addHostel',upload.array('photos',5),hostelController.createHostel.bind(hostelController))
+
 
 export default venderRouter
