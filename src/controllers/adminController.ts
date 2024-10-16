@@ -101,10 +101,6 @@ export class AdminController {
         }
     }
 
-
-
-
-
     async verifyVendor(req: Request, res: Response) {
         const { id } = req.body
             
@@ -116,6 +112,28 @@ export class AdminController {
             return res.status(200).json(result)
         } catch (error) {
             return res.status(500).json({ success: false, message: 'Internal server error' })
+        }
+    }
+
+    async refreshToken(req: Request, res: Response) {
+        try {
+            let { refreshToken } = req.params
+            if (!refreshToken) {
+                return res.status(401).json({
+                    message:'unautherised:no token provided'
+                })
+            }
+            const result = this.adminService.refreshToken(refreshToken)
+            return res.status(200).json(result)
+            
+        } catch (error:any) {
+            console.error("Error in VendorController.refreshToken:", error);
+            if(error.message === 'Token expired' || error.name === 'Token verification failed'){
+                res.status(401).json({ message: 'Unauthorized: Token expired' });
+                return
+            }else{
+                res.status(500).json({ error: "Internal server error" });
+            }
         }
     }
 }

@@ -7,7 +7,7 @@ import userRouter from './routes/userRoutes';
 import sendMail from './utils/mailer';
 import venderRouter from './routes/vendorRoutes';
 import adminRouter from './routes/adminRoutes';
-import fs from 'fs'
+import fs, { existsSync, unlink } from 'fs'
 import { job } from './utils/cronJob';
 import path from 'path';
 
@@ -30,14 +30,15 @@ methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
 
 const fileName=new Date().toISOString().split('T')[0]
 const loginDirectory=path.join(__dirname,'logs')
-const appLogStream=fs.createWriteStream(path.join(loginDirectory,`${fileName}.log`),{flags:'a'})
-  
+const appLogStream = fs.createWriteStream(path.join(loginDirectory, `${fileName}.log`), { flags: 'a' })
+ 
+
 app.use(morgan('combined', { stream: appLogStream }))
 app.use(morgan('dev'))
    
 app.use('/',userRouter)
 app.use('/vendor', venderRouter)
-app.use('/admin',adminRouter)
+app.use('/admin',adminRouter) 
 
 job.start()
 

@@ -1,5 +1,5 @@
 import UserRepository from "../repositories/userRepository";
-import { generateToken, verifyToken } from "../utils/jwt";
+import { generateRefreshToken, generateToken, verifyToken } from "../utils/jwt";
 import bcrypt from "bcryptjs";
 
 
@@ -20,10 +20,8 @@ export class AdminServices{
                 };
             }
     
-          console.log('Logging in admin:', admin);
-          let values:string[]=Object.values(admin)
-            console.log('Incoming password:', values[1]);
-            console.log('Saved hash:', adminExist?.Password);
+            //get elements from the object
+            let values: string[] = Object.values(admin)
             
             const passwordMatch: boolean = bcrypt.compareSync(
                 values[1],
@@ -48,11 +46,15 @@ export class AdminServices{
                     data: null,
                 }
             }
-          const token = generateToken(adminExist._id);
+            const token = generateToken(adminExist);
+            const refreshToken=generateRefreshToken(adminExist)
           return {
             success: true,
             message: "Login Successful",
-            data: token,
+              data: {
+                  token,
+                  refreshToken
+              }
           };
         } catch (error) {
           console.error("Error during login:", error);
@@ -156,5 +158,23 @@ export class AdminServices{
 
     }
 
-      
+    async refreshToken(token:string) {
+        try {
+          let payload = verifyToken(token)
+          const decoded = JSON.parse(JSON.stringify(payload)).payload
+          
+          const userData = await this.userRepository.getUserById(decoded._id)
+          
+          if (!userData) return { success: false, message: 'Admin Not found' }
+          if (!userData.IsAdmin) throw new Error("Token verification failed")
+          
+          const accessToken =generateToken(userData)
+          const refreshToken = generateToken(userData)
+          
+          return{ success:true,message:'Token refreshed successfully',data:{accessToken,refreshToken}}
+        } catch (error) {
+          console.error("Error in refreshToken:", error);
+          throw error;
+        }
+      } 
 }

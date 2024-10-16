@@ -4,7 +4,7 @@ import generateOtp from "../utils/otp";
 import OtpRepository from "../repositories/otpRepository";
 import bcrypt from "bcryptjs";
 import sendMail from "../utils/mailer";
-import { generateToken, verifyToken } from "../utils/jwt";
+import { generateRefreshToken, generateToken, verifyToken } from "../utils/jwt";
 import { OAuth2Client, TokenPayload } from "google-auth-library";
 import User from "../models/userModel";
 import { token } from "morgan";
@@ -109,14 +109,17 @@ export class UserService {
     }
     user.isVerified = true;
     user.save();
-    console.log("reach the service");
 
-    const token = await generateToken(user._id);
+    const token = generateToken(user);
+    const refreshToken=generateRefreshToken(user)
     const updateOtp = await this.otpRepository.updateOtp(email, "");
     return {
       success: true,
       message: "User verified successfully",
-      data: token,
+      data: {
+        token,
+        refreshToken
+      }
     };
   }
 
@@ -142,12 +145,16 @@ export class UserService {
             data: null,
           };
         } else if (existingEmail) {
-          const token = generateToken(existingEmail._id);
+          const token = generateToken(existingEmail);
+          const refreshToken=generateRefreshToken(existingEmail)
 
           return {
             success: true,
             message: "Login Successful",
-            data: token,
+            data: {
+              token,
+              refreshToken
+            },
           };
         }
 
@@ -160,11 +167,16 @@ export class UserService {
         });
 
         await newUser.save();
+        const token = generateToken(newUser)
+        const refreshToken=generateRefreshToken(newUser)
 
         return {
           success: true,
           message: "User Logged in succefully",
-          data: generateToken(newUser._id),
+          data: {
+            token,
+            refreshToken
+          },
         };
       }
     } catch (error) {
@@ -184,12 +196,9 @@ export class UserService {
           data: null,
         };
       }
-
-      console.log("Logging in user:", user);
+      //get form values in array
       let values: string[] = Object.values(user);
-      console.log("Incoming password:", values[1]);
-      console.log("Saved hash:", userExist?.Password);
-
+    
       const passwordMatch: boolean = bcrypt.compareSync(
         values[1],
         userExist?.Password
@@ -225,11 +234,14 @@ export class UserService {
           data: null,
         };
       }
-      const token = generateToken(userExist._id);
+      const token = generateToken(userExist);
+      const refreshToken=generateRefreshToken(userExist)
       return {
         success: true,
         message: "Login Successful",
-        data: token,
+        data: {
+          token,refreshToken
+        },
       };
     } catch (error) {
       console.error("Error during login:", error);
@@ -318,7 +330,6 @@ export class UserService {
   async changePassword(email: string, password: string) {
     try {
       const salt = bcrypt.genSaltSync(10);
-
       const hashedPassword = bcrypt.hashSync(password, salt);
 
       const user = await this.userRepository.updateUserByEmail(email, {
@@ -348,7 +359,7 @@ export class UserService {
 
       let id = JSON.parse(JSON.stringify(payload)).payload;
 
-      let user = await this.userRepository.getUserById(id);
+      let user = await this.userRepository.getUserById(id._id);
 
       return {
         success: true,
@@ -389,7 +400,7 @@ export class UserService {
 
       console.log(updates);
 
-      let result = await this.userRepository.updateUser(id, updates);
+      let result = await this.userRepository.updateUser(id._id, updates);
 
       if (!result) {
         return {
@@ -425,7 +436,7 @@ export class UserService {
       console.log('_id from change password',payload);
       
 
-      let existingUser = await this.userRepository.getUserById(id);
+      let existingUser = await this.userRepository.getUserById(id._id);
 
       if (!existingUser) {
         return {
@@ -464,6 +475,26 @@ export class UserService {
         message: 'error in change password',
       
       }
+    }
+  }
+
+  async refreshToken(token:string) {
+    try {
+      let payload = verifyToken(token)
+      const decoded = JSON.parse(JSON.stringify(payload)).payload
+      
+      const userData = await this.userRepository.getUserById(decoded._id)
+      
+      if (!userData) return { success: false, message: 'User Not found' }
+      if (!userData.IsActive) throw new Error("Token verification failed")
+      
+      const accessToken =generateToken(userData)
+      const refreshToken = generateToken(userData)
+      
+      return{ success:true,message:'Token refreshed successfully',data:{accessToken,refreshToken}}
+    } catch (error) {
+      console.error("Error in refreshToken:", error);
+      throw error;
     }
   }
 }
