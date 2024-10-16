@@ -147,7 +147,31 @@ class VendorController {
     } 
 
     
-  
+    async newPassword(req:Request,res:Response) {
+        try {
+          let data = req.body
+          if (!data) {
+            return res.status(400).json({
+              success: false,
+              message: 'no data found',
+              data:null
+            })
+          }
+            let bearer = req.headers.authorization!;
+            let token = bearer.split(" ")[1];
+    
+            let result = await this.vendorService.newPassWord(data, token)
+            res.status(200).json(result)
+          
+          
+        } catch (error) {
+          console.log(error);
+          res.json(500).json({
+            success: false,
+            message:'Internal Server Error'
+          })
+        }
+      }
 }
 
 export default VendorController 

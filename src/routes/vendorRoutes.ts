@@ -38,5 +38,6 @@ venderRouter.put('/edit-profile', upload.single('avatar'), vendorController.edit
 
 venderRouter.post('/addHostel',upload.array('photos',5),hostelController.createHostel.bind(hostelController))
 
+venderRouter.put('/changePassword',vendorController.newPassword.bind(vendorController))
 
 export default venderRouter

@@ -2,8 +2,10 @@ import { Request, Response } from "express";
 import { HostelService } from "../services/hostelService";
 
 export class HostelController { 
-    constructor(private hostelService: HostelService) {
-        this.hostelService=hostelService
+    private hostelService: HostelService;
+
+    constructor(hostelService: HostelService) {
+        this.hostelService = hostelService;
     }
 
 
@@ -37,7 +39,21 @@ export class HostelController {
             
             return res.status(500).json( {
                 success: false,
-                messge: 'Internal server Error'
+                message: 'Internal server Error'
+            })
+        }
+    }
+
+    async getAllHostel(req: Request, res: Response) {
+        try {
+           
+            const result =await this.hostelService.getAllHostel()
+           return res.status(200).json(result)
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json( {
+                success: false,
+                message: 'Internal server Error'
             })
         }
     }

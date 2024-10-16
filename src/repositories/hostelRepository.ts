@@ -4,9 +4,6 @@ import Hostel from "../models/hostelModel";
 export class HostelRepository {
     async addHostel(hostel:any,parsedRate:any): Promise<IHostel> {
 
-        
-      
-        
       const newHostel = new Hostel(hostel);
       newHostel.rates=[]
       for (let { type, price } of parsedRate) {
@@ -15,7 +12,6 @@ export class HostelRepository {
               price:price
           })
         }
-        
         newHostel.address = {
             city: hostel.city,
             street: hostel.street,
@@ -38,6 +34,7 @@ export class HostelRepository {
     }
 
     async getHostels(): Promise<IHostel[]> {
-        return Hostel.find();
+        return await Hostel.find().sort({ createdAt: -1 }).exec();
     }
 }
+  

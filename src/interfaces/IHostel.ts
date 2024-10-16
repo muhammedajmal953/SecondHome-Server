@@ -22,9 +22,9 @@ export interface IHostel {
     foodRate: number;    
     createdAt: Date;
     updatedAt: Date;
-    isCompleted: boolean;
+    isDeleted: boolean;
     isActive: boolean;
-    catagory: string; 
+    category: string; 
     owner: ObjectId;
     advance: number;
 }

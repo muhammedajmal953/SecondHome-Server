@@ -509,6 +509,48 @@ async forgotOtpHandler(email: string, otp: string) {
       }
     }
   }
+
+
+  async newPassWord(data: any, token: string) {
+    try {
+      let { oldPassword, newPassword } = data;
+      let payload = verifyToken(token);
+
+      let id = JSON.parse(JSON.stringify(payload)).payload;
+
+      let existingUser = await this.userRepository.getUserById(id);
+
+      let passwordMatch: boolean = bcrypt.compareSync(
+        oldPassword,
+        existingUser?.Password!
+      );
+
+      if (!passwordMatch) {
+        return {
+          success: false,
+          message: "wrong old password",
+        };
+      }
+
+        const salt = bcrypt.genSaltSync(10);
+
+        const hashedPassword = bcrypt.hashSync(newPassword, salt);
+
+        let result=await this.userRepository.newPassword(id,hashedPassword)
+      
+      return {
+        success:true,
+        message: 'password changed',
+        data:result
+      }
+    } catch (error) {
+      console.log(error);
+      return {
+        seccess: false,
+        message: 'error in change password',
+      }
+    }
+  }
      
 }
  

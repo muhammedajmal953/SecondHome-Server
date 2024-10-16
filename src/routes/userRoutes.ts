@@ -12,6 +12,9 @@ const userRepository = new UserRepository();
 const otpRepository = new OtpRepository();
 const userService = new UserService(userRepository, otpRepository);
 const userController = new UserController(userService);
+const hostelRepository=new HostelRepository()
+const hostelService = new HostelService(hostelRepository)
+const hostelController=new HostelController(hostelService)
 
 
 
@@ -36,6 +39,9 @@ userRouter.get('/getUser', userController.getUser.bind(userController))
 
 userRouter.put('/edit-profile', upload.single('avatar'), userController.editProfile.bind(userController))
 
+userRouter.get('/getAllHostel',hostelController.getAllHostel.bind(hostelController))
+
+userRouter.put('/changePassword', userController.newPassword.bind(userController))
 
 
  

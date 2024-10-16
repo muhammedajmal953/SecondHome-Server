@@ -9,6 +9,7 @@ import { OAuth2Client, TokenPayload } from "google-auth-library";
 import User from "../models/userModel";
 import { token } from "morgan";
 import { uploadToS3 } from "../utils/s3Bucket";
+import { log } from "util";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -110,7 +111,7 @@ export class UserService {
     user.save();
     console.log("reach the service");
 
-    const token = await generateToken(user);
+    const token = await generateToken(user._id);
     const updateOtp = await this.otpRepository.updateOtp(email, "");
     return {
       success: true,
@@ -172,38 +173,38 @@ export class UserService {
   }
 
   async loginUser(user: any) {
-    try { 
-        const userExist = await this.userRepository.getUserByEmail(user.Email);
-        
-        if (!userExist) {
-            console.error("User not found");
-            return {
-                success: false,
-                message: "User not found, please register",
-                data: null,
-            };
-        }
+    try {
+      const userExist = await this.userRepository.getUserByEmail(user.Email);
 
-      console.log('Logging in user:', user);
-      let values:string[]=Object.values(user)
-        console.log('Incoming password:', values[1]);
-        console.log('Saved hash:', userExist?.Password);
-        
-        const passwordMatch: boolean = bcrypt.compareSync(
-            values[1],
-            userExist?.Password
-        );
-
-        if (!passwordMatch) {
-            console.error("Password incorrect");
-            return {
-                success: false,
-                message: "Password incorrect",
-                data: null,
-            };
+      if (!userExist) {
+        console.error("User not found");
+        return {
+          success: false,
+          message: "User not found, please register",
+          data: null,
+        };
       }
-      
-      if (userExist.isVerified===false) { 
+
+      console.log("Logging in user:", user);
+      let values: string[] = Object.values(user);
+      console.log("Incoming password:", values[1]);
+      console.log("Saved hash:", userExist?.Password);
+
+      const passwordMatch: boolean = bcrypt.compareSync(
+        values[1],
+        userExist?.Password
+      );
+
+      if (!passwordMatch) {
+        console.error("Password incorrect");
+        return {
+          success: false,
+          message: "Password incorrect",
+          data: null,
+        };
+      }
+
+      if (userExist.isVerified === false) {
         return {
           success: false,
           message: "Please verify your email",
@@ -234,86 +235,84 @@ export class UserService {
       console.error("Error during login:", error);
       return {
         success: false,
-        message: 'sever error please try again later',
+        message: "sever error please try again later",
         data: null,
-      }
+      };
     }
-}
+  }
   async forgotPassword(email: string) {
     try {
-      console.log('before user service');
-      
-      let user = await this.userRepository.getUserByEmail( email );
-      console.log('email at forgot service', email);
-      
-       
+      console.log("before user service");
+
+      let user = await this.userRepository.getUserByEmail(email);
+      console.log("email at forgot service", email);
+
       if (!user) {
         return {
           success: false,
           message: "Your email is not registered",
           data: null,
-        }
+        };
       }
-    
+
       const newOtp = generateOtp();
-      sendMail('secondHome', "Forgot Password", user.Email, newOtp);
+      sendMail("secondHome", "Forgot Password", user.Email, newOtp);
       const updateOtp = await this.otpRepository.updateOtp(email, newOtp);
-      
-      console.log(newOtp,'the forgot password otp');
-      
+
+      console.log(newOtp, "the forgot password otp");
+
       return {
         success: true,
         message: "Otp sent to your email successfully",
         data: null,
-      }
-    
+      };
     } catch (error) {
       console.error(error);
       return {
         success: false,
-        message: 'sever error please try again later',
+        message: "sever error please try again later",
         data: null,
-      }
-      
+      };
     }
   }
 
- async forgotOtpHandle(email:string,otp:string) {
-   try {
-    let otpData = await this.otpRepository.getOtpByEmail(email);
-    if (!otpData) {
-      console.log("otp not found");
-      return {
-        success: false,
-        message: "Something went wrong",
-        data: null,
-      };
-    } 
- 
-    if (otpData.ExpiresAt < new Date()) { 
-      console.log("otp expired");
-      return {
-        success: false,
-        message: "OTP expired",
-        data: null,
-      };
-    } if (otpData.Otp !== otp) {
-      console.log("invalid otp");
-      return {
-        success: false,
-        message: "Invalid OTP",
-        data: null,
+  async forgotOtpHandle(email: string, otp: string) {
+    try {
+      let otpData = await this.otpRepository.getOtpByEmail(email);
+      if (!otpData) {
+        console.log("otp not found");
+        return {
+          success: false,
+          message: "Something went wrong",
+          data: null,
+        };
       }
+
+      if (otpData.ExpiresAt < new Date()) {
+        console.log("otp expired");
+        return {
+          success: false,
+          message: "OTP expired",
+          data: null,
+        };
+      }
+      if (otpData.Otp !== otp) {
+        console.log("invalid otp");
+        return {
+          success: false,
+          message: "Invalid OTP",
+          data: null,
+        };
+      }
+
+      return {
+        success: true,
+        message: "OTP verified",
+        data: null,
+      };
+    } catch (error) {
+      console.log(error);
     }
- 
-    return {
-      success: true,
-      message: "OTP verified",
-      data: null,
-    }
-   } catch (error) {
-     console.log(error);
-   }
   }
 
   async changePassword(email: string, password: string) {
@@ -321,9 +320,11 @@ export class UserService {
       const salt = bcrypt.genSaltSync(10);
 
       const hashedPassword = bcrypt.hashSync(password, salt);
-  
-      const user = await this.userRepository.updateUserByEmail(email, { Password: hashedPassword });
-      
+
+      const user = await this.userRepository.updateUserByEmail(email, {
+        Password: hashedPassword,
+      });
+
       if (!user) {
         return {
           success: false,
@@ -336,29 +337,24 @@ export class UserService {
         message: "Password changed successfully",
         data: null,
       };
-    
     } catch (error) {
       console.log(error);
-      
-    } 
+    }
   }
   async getUser(token: string) {
-    try { 
-      console.log('getUser');
+    try {
+      console.log("getUser");
       let payload = verifyToken(token);
-      
-      
-      
 
-      let id=JSON.parse(JSON.stringify(payload)).payload;
+      let id = JSON.parse(JSON.stringify(payload)).payload;
 
       let user = await this.userRepository.getUserById(id);
-      
+
       return {
         success: true,
         message: "User details fetched successfully",
         data: user,
-      }  
+      };
     } catch (error) {
       console.error("Error fetching user details:", error);
       return {
@@ -369,57 +365,104 @@ export class UserService {
     }
   }
 
-  async editProfile(token: string,updates:any,file:Express.Multer.File) {
+  async editProfile(token: string, updates: any, file: Express.Multer.File) {
     try {
-
       let payload = verifyToken(token);
 
-    
-      
-      
-    
       let id = JSON.parse(JSON.stringify(payload)).payload;
 
-      console.log('user edit payload',id._id);
-      
-
-      
+      console.log("user edit payload", id);
 
       if (file) {
         const bucketName = process.env.AWS_S3_BUCKET_NAME!;
         const key = `upload/${Date.now()}-${file.originalname}`;
         const fileBuffer = file.buffer;
         const mimetype = file.mimetype;
-        const imageUrl = await uploadToS3(bucketName, key, fileBuffer, mimetype);
-        updates = {...updates,Avatar:imageUrl}
+        const imageUrl = await uploadToS3(
+          bucketName,
+          key,
+          fileBuffer,
+          mimetype
+        );
+        updates = { ...updates, Avatar: imageUrl };
       }
 
       console.log(updates);
-      
-      
-      let result = await this.userRepository.updateUser(id._id, updates);
-      
+
+      let result = await this.userRepository.updateUser(id, updates);
 
       if (!result) {
         return {
           success: false,
           message: "Something went wrong",
           data: null,
-        }
+        };
       }
-      
+
       return {
         success: true,
         message: "Profile updated successfully",
-        data: result, 
-      } 
+        data: result,
+      };
     } catch (error) {
       console.log(error);
-       
+
       return {
         success: false,
         message: error,
         data: null,
+      };
+    }
+  }
+
+  async newPassWord(data: any, token: string) {
+    try {
+      let { oldPassword, newPassword } = data;
+      let payload = verifyToken(token);
+
+      let id = JSON.parse(JSON.stringify(payload)).payload;
+
+      console.log('_id from change password',payload);
+      
+
+      let existingUser = await this.userRepository.getUserById(id);
+
+      if (!existingUser) {
+        return {
+            success: false,
+            message: "User not found",
+        };
+    }
+
+      let passwordMatch: boolean = bcrypt.compareSync(
+        oldPassword,
+        existingUser?.Password!
+      );
+
+      if (!passwordMatch) {
+        return {
+          success: false,
+          message: "wrong old password",
+        };
+      }
+
+        const salt = bcrypt.genSaltSync(10);
+
+        const hashedPassword = bcrypt.hashSync(newPassword, salt);
+
+        let result=await this.userRepository.newPassword(id,hashedPassword)
+      
+      return {
+        success:true,
+        message: 'password changed',
+        data:result
+      }
+    } catch (error) {
+      console.log(error);
+      return {
+        seccess: false,
+        message: 'error in change password',
+      
       }
     }
   }

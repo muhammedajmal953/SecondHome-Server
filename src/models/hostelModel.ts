@@ -28,11 +28,17 @@ const HostelModel = new mongoose.Schema<IHostel>({
         }
     ],
     foodRate: Number,
-    createdAt: Date,
-    updatedAt: Date,
-    isCompleted: Boolean,
+    createdAt: {
+        type: Date,
+        default:new Date
+    },
+    updatedAt: {
+        type: Date,
+        default:new Date
+    },
+    isDeleted: Boolean,
     isActive: Boolean,
-    catagory: String,
+    category: String,
     owner: ObjectId,
     advance:Number
 })

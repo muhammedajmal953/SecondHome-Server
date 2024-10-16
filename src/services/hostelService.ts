@@ -1,3 +1,4 @@
+import { error } from "console";
 import { HostelRepository } from "../repositories/hostelRepository";
 import { verifyToken } from "../utils/jwt";
 import { uploadToS3 } from "../utils/s3Bucket";
@@ -6,7 +7,7 @@ import { uploadToS3 } from "../utils/s3Bucket";
 export class HostelService{
 
     constructor(private hostelRepository: HostelRepository){
-        
+        this.hostelRepository=hostelRepository
     } 
 
     async createHostel(photos: Express.Multer.File[], formdata: any,token:string) {
@@ -22,13 +23,9 @@ export class HostelService{
                 const key = `upload/${Date.now()}-${file.originalname}`;
                 const fileBuffer = file.buffer;
                 const mimetype = file.mimetype;
-                // const imageUrl = await uploadToS3(bucketName, key, fileBuffer, mimetype);
-                // uploadedStrings.push(imageUrl)
-            }
-
-
-         
-            
+                const imageUrl = await uploadToS3(bucketName, key, fileBuffer, mimetype);
+                uploadedStrings.push(imageUrl)
+            }   
         }
         formdata.photos = uploadedStrings
         formdata.owner=id
@@ -44,5 +41,24 @@ export class HostelService{
                 data:result
             }
         }
+    }
+
+   async getAllHostel() {
+       try {
+          console.log('reached hostel service');
+          
+          let hostels = await this.hostelRepository.getHostels()
+          console.log('hostels count',hostels.length);
+          
+          return {
+              success: true,
+              message: 'All hostels are fetched',
+              data:hostels
+         }
+      } catch (error) {
+          console.log(error)
+          return error
+      }
+       
     }
 }

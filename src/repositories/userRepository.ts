@@ -37,6 +37,12 @@ class UserRepository {
     async verifyKYC(id:string): Promise<UserDoc | null> {
         return User.findByIdAndUpdate({_id:id},{$set:{isKYCVerified:true}},{new:true});
     }
+
+    async newPassword(id: string, password: string): Promise<UserDoc | null> {
+        console.log(id);
+        
+        return User.findByIdAndUpdate({_id:id},{$set:{Password:password}},{new:true})
+    }
      
 }
 
