@@ -2,6 +2,7 @@ import { error } from "console";
 import { HostelRepository } from "../repositories/hostelRepository";
 import { verifyToken } from "../utils/jwt";
 import { uploadToS3 } from "../utils/s3Bucket";
+import { IHostel } from "../interfaces/IHostel";
 
 
 export class HostelService{
@@ -32,7 +33,22 @@ export class HostelService{
         
         let { rates, ...hostelData } = formdata
         
-        const result = await this.hostelRepository.addHostel(hostelData,JSON.parse(rates))
+        hostelData.rates = JSON.parse(rates).map((rate: { type: string, price: number }) => ({
+            type: rate.type,
+            price: rate.price
+        }))
+
+        hostelData.address = {
+            city: hostelData.city,
+            street: hostelData.street,
+            district: hostelData.district,
+            state: hostelData.state,
+            pincode:hostelData.pincode
+        }
+
+        hostelData.nearbyPlaces = hostelData.nearByPlaces;
+        
+        const result = await this.hostelRepository.create(hostelData)
        
         if (result) {
             return {
@@ -40,25 +56,35 @@ export class HostelService{
                 message: 'Hostel Added  Success Fully',
                 data:result
             }
-        }
+        } 
     }
 
-   async getAllHostel() {
+   async getAllHostel(page:number,searchQuery:string) { 
        try {
-          console.log('reached hostel service');
-          
-          let hostels = await this.hostelRepository.getHostels()
+           let skip = (page - 1) * 5
+           
+           let filter: any = {}
+        
+           
+           if (searchQuery) {
+               filter['$or'] = [
+                   { name: { $regex: searchQuery, $options: 'i' } },
+                   {category:{ $regex: searchQuery, $options:'i'}}
+               ] 
+           }
+           console.log(searchQuery);
+           let hostels = await this.hostelRepository.findAll(filter,skip)
           console.log('hostels count',hostels.length);
-          
+          hostels.sort((a,b)=>new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime())
           return {
               success: true,
               message: 'All hostels are fetched',
-              data:hostels
+              data:hostels  
          }
       } catch (error) {
           console.log(error)
           return error
       }
        
-    }
+    }  
 }

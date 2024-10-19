@@ -66,37 +66,45 @@ export class AdminServices{
         }
     }
 
-    async getAllUsers(page: number, limit: number) {
+    async getAllUsers(name:string,page: number, limit: number) {
       
-      let newLimit=limit*(page-1)
-
-      let users = await this.userRepository.getUsers(newLimit)
-      
-      
+        let newLimit = limit * (page - 1)
+        let filter:any={ Role: 'User' }
+        if (name) {
+            filter['$or'] = [
+                { First_name: { $regex: name, $options: 'i' } },
+                {Email:{$regex:name,$options:'i'}},
+            ]
+        }
+       
+        let users = await this.userRepository.findAll(filter, newLimit)
         return {
             success: true,
             message: "Users fetched successfully",
             data: users,
         }
     }
-    async getAllVendors(page: number, limit: number) {
+    async getAllVendors(name:string,page: number, limit: number) {
       
-      let newLimit=limit*(page-1)
-
-      let users = await this.userRepository.getVendors(newLimit)
-      
-      
+        let newLimit = limit * (page - 1)
+        let filter:any={ Role: 'Vendor' }
+        if (name) {
+            filter['$or'] = [
+                { First_name: { $regex: name, $options: 'i' } },
+                {Email:{$regex:name,$options:'i'}},
+            ]
+        }
+        let users = await this.userRepository.findAll(filter, newLimit)
+        
         return {
             success: true,
             message: "Users fetched successfully",
             data: users,
-        }
+        } 
     }
     
-    async blockUser(token: string) {
-        
-        
-        let user = await this.userRepository.getUserById(token)
+    async blockUser(id: string) {
+        let user = await this.userRepository.findById(id)
         
         if(!user){
             return {
@@ -114,8 +122,8 @@ export class AdminServices{
             data: null,
         }
     }
-    async unBlockUser(token: string) {
-        let user = await this.userRepository.getUserById(token)
+    async unBlockUser(id: string) {
+        let user = await this.userRepository.findById(id)
         
         if(!user){
             return {
@@ -136,7 +144,7 @@ export class AdminServices{
 
     async verifyVendor(_id: string) {
         try {
-            let verification = await this.userRepository.verifyKYC(_id)
+            let verification = await this.userRepository.update(_id,{isKYCVerified:true})
 
             if (!verification) { 
               
@@ -163,7 +171,7 @@ export class AdminServices{
           let payload = verifyToken(token)
           const decoded = JSON.parse(JSON.stringify(payload)).payload
           
-          const userData = await this.userRepository.getUserById(decoded._id)
+          const userData = await this.userRepository.findById(decoded._id)
           
           if (!userData) return { success: false, message: 'Admin Not found' }
           if (!userData.IsAdmin) throw new Error("Token verification failed")

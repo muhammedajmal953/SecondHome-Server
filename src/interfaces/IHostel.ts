@@ -1,8 +1,8 @@
-import { ObjectId } from "mongoose";
+import { ObjectId,Document } from "mongoose";
 
 
 
-export interface IHostel {
+export interface IHostel extends Document{
     name: string;
     address: { 
         street: string;

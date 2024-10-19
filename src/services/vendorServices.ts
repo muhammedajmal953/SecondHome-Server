@@ -41,7 +41,7 @@ export class VendorService {
 
     user.Role = "Vendor";
 
-    const newUser = await this.userRepository.createUser(user);
+    const newUser = await this.userRepository.create(user);
     if (!newUser) {
       return {
         success: false,
@@ -54,7 +54,7 @@ export class VendorService {
 
     sendMail("Second Home", "OTP", newUser.Email, newOtp);
 
-    const otp = await this.otpRepository.createOtp({
+    const otp = await this.otpRepository.create({
       Email: email,
       Otp: newOtp,
       CreatedAt: new Date(),
@@ -113,7 +113,8 @@ export class VendorService {
 
     const token = generateToken(user);
     const refreshToken=generateRefreshToken(user)
-    const updateOtp = await this.otpRepository.updateOtp(email, "");
+    let existingOtp = await this.otpRepository.getOtpByEmail(email)
+    const updateOtp = await this.otpRepository.update(existingOtp?._id as string,{Otp:""});
     return {
       success: true,
       message: "User verified successfully",
@@ -296,7 +297,12 @@ export class VendorService {
 
       const newOtp = generateOtp();
       sendMail("secondHome", "Forgot Password", user.Email, newOtp);
-      const updateOtp = await this.otpRepository.updateOtp(email, newOtp);
+      const otpData = {
+        Otp: newOtp,
+        ExpiresAt: new Date(Date.now() + 600000) // Expires in 10 minutes
+      };
+      let existingOtp = await this.otpRepository.getOtpByEmail(email)
+      const updateOtp = await this.otpRepository.update(existingOtp?._id as string,otpData);
 
       console.log(newOtp, "the forgot password otp");
 
@@ -322,9 +328,19 @@ export class VendorService {
       
       const hashedPassword = bcrypt.hashSync(password?.newPassword, salt);
 
-      const user = await this.userRepository.updateUserByEmail(email, {
+      const userExist =await this.userRepository.getUserByEmail(email)
+      
+      if (!userExist) {
+        return {
+          success: false,
+          message:'No User Found'
+        }
+      }
+     let id:string=userExist?._id as string
+      const user = await this.userRepository.update(id, {
         Password: hashedPassword,
       });
+
 
       if (!user) {
         return {
@@ -417,9 +433,18 @@ export class VendorService {
         };
       }
 
-      log(`Image uploaded successfully: ${imageUrl}`);
-      let result = await this.userRepository.uploadKyc(email, imageUrl);
-
+      const userExist =await this.userRepository.getUserByEmail(email)
+      
+      if (!userExist) {
+        return {
+          success: false,
+          message:'No User Found'
+        }
+      }
+     let id:string=userExist?._id as string
+      const result = await this.userRepository.update(id, {
+        lisence:imageUrl
+      });
       if (!result) {
         return {
           success: false,
@@ -450,7 +475,7 @@ export class VendorService {
 
       let id = JSON.parse(JSON.stringify(payload)).payload;
 
-      let user = await this.userRepository.getUserById(id._id);
+      let user = await this.userRepository.findById(id._id);
 
       return {
         success: true,
@@ -487,7 +512,7 @@ export class VendorService {
         updates = { ...updates, Avatar: imageUrl };
       }
 
-      let result = await this.userRepository.updateUser(id._id, updates);
+      let result = await this.userRepository.update(id._id, updates);
 
       if (!result) {
         return {
@@ -520,7 +545,7 @@ export class VendorService {
 
       let id = JSON.parse(JSON.stringify(payload)).payload;
 
-      let existingUser = await this.userRepository.getUserById(id._id);
+      let existingUser = await this.userRepository.findById(id._id);
 
       let passwordMatch: boolean = bcrypt.compareSync(
         oldPassword,
@@ -538,7 +563,7 @@ export class VendorService {
 
       const hashedPassword = bcrypt.hashSync(newPassword, salt);
 
-      let result = await this.userRepository.newPassword(id, hashedPassword);
+      let result = await this.userRepository.update(id, {Password:hashedPassword});
 
       return {
         success: true,
@@ -558,7 +583,7 @@ export class VendorService {
       let payload = verifyToken(token)
       const decoded = JSON.parse(JSON.stringify(payload)).payload
       
-      const userData = await this.userRepository.getUserById(decoded._id)
+      const userData = await this.userRepository.findById(decoded._id)
       
       if (!userData) return { success: false, message: 'Vendor Not found' }
       if (!userData.IsActive) throw new Error("Token verification failed")
@@ -572,4 +597,33 @@ export class VendorService {
       throw error;
     }
   }
+
+  async resendOtp(email: string) {
+    try {
+      let registeredUser = await this.userRepository.getUserByEmail(email)
+      
+      if (!registeredUser) {
+        return {success:false,message:'No user Found'}
+      }
+
+      let otp = generateOtp()
+      sendMail("secondHome", "Resended Otp", email, otp);
+
+      console.log('vendor resend Otp:-',otp);
+      
+      const otpData = {
+        Otp: otp,
+        ExpiresAt: new Date(Date.now() + 600000) 
+      };
+      let existingOtp = await this.otpRepository.getOtpByEmail(email)
+      const updateOtp = await this.otpRepository.update(existingOtp?._id as string,otpData);
+      return {
+        success: true,
+        message:'otp resend successfully'
+     } 
+    } catch (error) {
+      console.error('Error from Userservice.resendOtp',error);  
+    }
+  }
 }
+

@@ -32,9 +32,12 @@ export class AdminController {
             let { page, limit } = req.params;
             const newPage = Number(page) || 1;
             const newLimit = Number(limit) || 10;
+            const { searchQuery } = req.query
+            let name=searchQuery as string
+           
+            console.log('get all Users search query',searchQuery);
 
-            console.log(`Fetching all users: page=${newPage}, limit=${newLimit}`);
-            const result = await this.adminService.getAllUsers(newPage, newLimit);
+            const result = await this.adminService.getAllUsers(name,newPage, newLimit);
 
             return res.status(200).json(result);
         } catch (error) {
@@ -49,8 +52,13 @@ export class AdminController {
             const newPage = Number(page) || 1;
             const newLimit = Number(limit) || 10;
 
-            console.log(`Fetching all vendors: page=${newPage}, limit=${newLimit}`);
-            const result = await this.adminService.getAllVendors(newPage, newLimit);
+            const { searchQuery } = req.query
+            let name=searchQuery as string
+           
+            console.log('get all Users search query',searchQuery);
+            
+           
+            const result = await this.adminService.getAllVendors(name,newPage, newLimit);
 
             return res.status(200).json(result);
         } catch (error) {

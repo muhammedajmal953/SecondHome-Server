@@ -40,11 +40,14 @@ userRouter.get('/getUser',userAuth, userController.getUser.bind(userController))
 
 userRouter.put('/edit-profile',userAuth, upload.single('avatar'), userController.editProfile.bind(userController))
 
-userRouter.get('/getAllHostel',userAuth,hostelController.getAllHostel.bind(hostelController))
+userRouter.get('/getAllHostel/:page',userAuth,hostelController.getAllHostel.bind(hostelController))
 
 userRouter.put('/changePassword', userAuth, userController.newPassword.bind(userController))
 
 userRouter.get('/token',userController.refreshToken.bind(userController))
+
+userRouter.post('/resend-otp',userController.resendOtp.bind(userController))
+
 
 
 

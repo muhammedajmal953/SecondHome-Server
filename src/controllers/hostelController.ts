@@ -46,8 +46,9 @@ export class HostelController {
 
     async getAllHostel(req: Request, res: Response) {
         try {
-           
-            const result =await this.hostelService.getAllHostel()
+            let { searchQuery } = req.query
+            let {page}=req.params
+            const result =await this.hostelService.getAllHostel(Number(page),searchQuery as string)
            return res.status(200).json(result)
         } catch (error) {
             console.error(error);

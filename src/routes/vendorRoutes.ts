@@ -41,6 +41,10 @@ venderRouter.post('/addHostel',vendorAuth,upload.array('photos',5),hostelControl
 
 venderRouter.put('/changePassword', vendorAuth, vendorController.newPassword.bind(vendorController))
 
-venderRouter.get('/token',vendorController.refreshToken.bind(vendorController))
+venderRouter.get('/token', vendorController.refreshToken.bind(vendorController))
+
+venderRouter.post('/resend-otp',vendorController.resendOtp.bind(vendorController))
+
+
 
 export default venderRouter

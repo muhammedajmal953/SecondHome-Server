@@ -1,6 +1,7 @@
+import { Document } from "mongoose"
 
 
-export interface OtpDoc{
+export interface OtpDoc extends Document{
     Email: string
     Otp: string
     CreatedAt: Date

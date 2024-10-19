@@ -10,6 +10,7 @@ import User from "../models/userModel";
 import { token } from "morgan";
 import { uploadToS3 } from "../utils/s3Bucket";
 import { log } from "util";
+import { OtpDoc } from "../interfaces/IOtp";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -41,7 +42,7 @@ export class UserService {
 
     user.Role = "User";
 
-    const newUser = await this.userRepository.createUser(user);
+    const newUser = await this.userRepository.create(user);
     if (!newUser) {
       return {
         success: false,
@@ -54,13 +55,15 @@ export class UserService {
 
     sendMail("Second Home", "OTP", newUser.Email, newOtp);
 
-    const otp = await this.otpRepository.createOtp({
+    let newOtpData = {
       Email: email,
       Otp: newOtp,
       CreatedAt: new Date(),
       ExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
       isUpdated: false,
-    });
+    }
+
+    const otp = await this.otpRepository.create(newOtpData);
 
     return {
       success: true,
@@ -111,8 +114,13 @@ export class UserService {
     user.save();
 
     const token = generateToken(user);
-    const refreshToken=generateRefreshToken(user)
-    const updateOtp = await this.otpRepository.updateOtp(email, "");
+    const refreshToken = generateRefreshToken(user)
+    
+    const existingOtp = await this.otpRepository.getOtpByEmail(email)
+
+
+
+    const updateOtp = await this.otpRepository.update(existingOtp?._id as string,{Otp:""});
     return {
       success: true,
       message: "User verified successfully",
@@ -269,7 +277,15 @@ export class UserService {
 
       const newOtp = generateOtp();
       sendMail("secondHome", "Forgot Password", user.Email, newOtp);
-      const updateOtp = await this.otpRepository.updateOtp(email, newOtp);
+      const otpData = {
+        Otp: newOtp,
+        ExpiresAt: new Date(Date.now() + 600000) 
+      };
+      let existingOtp = await this.otpRepository.getOtpByEmail(email)
+
+
+
+    const updateOtp = await this.otpRepository.update(existingOtp?._id as string,otpData);
 
       console.log(newOtp, "the forgot password otp");
 
@@ -316,7 +332,7 @@ export class UserService {
           data: null,
         };
       }
-
+      let updateOtp=await this.otpRepository.update(otpData._id as string,{Otp:''})
       return {
         success: true,
         message: "OTP verified",
@@ -327,12 +343,24 @@ export class UserService {
     }
   }
 
-  async changePassword(email: string, password: string) {
+  async changePassword(email: string, password:{newPassword:string,confirmPassword:string} ) {
     try {
-      const salt = bcrypt.genSaltSync(10);
-      const hashedPassword = bcrypt.hashSync(password, salt);
 
-      const user = await this.userRepository.updateUserByEmail(email, {
+      
+      
+      const salt = bcrypt.genSaltSync(10);
+      const hashedPassword = bcrypt.hashSync(password.newPassword, salt);
+
+      const userExist =await this.userRepository.getUserByEmail(email)
+      
+      if (!userExist) {
+        return {
+          success: false,
+          message:'No User Found'
+        }
+      }
+     let id:string=userExist?._id as string
+      const user = await this.userRepository.update(id, {
         Password: hashedPassword,
       });
 
@@ -352,6 +380,8 @@ export class UserService {
       console.log(error);
     }
   }
+
+
   async getUser(token: string) {
     try {
       console.log("getUser");
@@ -359,7 +389,7 @@ export class UserService {
 
       let id = JSON.parse(JSON.stringify(payload)).payload;
 
-      let user = await this.userRepository.getUserById(id._id);
+      let user = await this.userRepository.findById(id._id);
 
       return {
         success: true,
@@ -400,7 +430,7 @@ export class UserService {
 
       console.log(updates);
 
-      let result = await this.userRepository.updateUser(id._id, updates);
+      let result = await this.userRepository.update(id._id, updates);
 
       if (!result) {
         return {
@@ -436,7 +466,7 @@ export class UserService {
       console.log('_id from change password',payload);
       
 
-      let existingUser = await this.userRepository.getUserById(id._id);
+      let existingUser = await this.userRepository.findById(id._id);
 
       if (!existingUser) {
         return {
@@ -461,7 +491,7 @@ export class UserService {
 
         const hashedPassword = bcrypt.hashSync(newPassword, salt);
 
-        let result=await this.userRepository.newPassword(id,hashedPassword)
+        let result=await this.userRepository.update(id,{Password:hashedPassword})
       
       return {
         success:true,
@@ -483,7 +513,7 @@ export class UserService {
       let payload = verifyToken(token)
       const decoded = JSON.parse(JSON.stringify(payload)).payload
       
-      const userData = await this.userRepository.getUserById(decoded._id)
+      const userData = await this.userRepository.findById(decoded._id)
       
       if (!userData) return { success: false, message: 'User Not found' }
       if (!userData.IsActive) throw new Error("Token verification failed")
@@ -495,6 +525,38 @@ export class UserService {
     } catch (error) {
       console.error("Error in refreshToken:", error);
       throw error;
+    }
+  }
+
+  async resendOtp(email: string) {
+    try {
+      let registeredUser = await this.userRepository.getUserByEmail(email)
+      
+      if (!registeredUser) {
+        return {success:false,message:'No user Found'}
+      }
+
+      let otp = generateOtp()
+      sendMail("secondHome", "Resended Otp", email, otp);
+      console.log('resend otp', otp);
+      console.log(email);
+      
+      const otpData = {
+        Otp: otp,
+        ExpiresAt: new Date(Date.now() + 600000) // Expires in 10 minutes
+      };
+      let existingOtp = await this.otpRepository.getOtpByEmail(email)
+
+
+
+      const updateOtp = await this.otpRepository.update(existingOtp?._id as string,otpData);  
+      return {
+        success: true,
+        message:'otp resend successfully'
+     } 
+    } catch (error) {
+      console.error('Error from Userservice.resendOtp',error);
+      
     }
   }
 }

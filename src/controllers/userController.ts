@@ -179,7 +179,31 @@ class UserController {
             res.status(500).json({ error: "Internal server error" });
         }
     }
-}
+  }
+  
+  async resendOtp(req: Request, res: Response) {
+    try {
+      let { email } = req.body
+      console.log(email);
+      
+      if (!email) {
+        return res.status(401).json({ success: false,message:'UnAutherised Approach'})
+      }
+
+      
+      
+     let result=this.userService.resendOtp(email)
+      return res.status(200).json(result)
+    } catch (error: any) {
+      console.error("Error in user resend otp controler:",error);
+      if (error.message === 'NO User Found') {
+        res.status(401).json({ message: 'Unauthorized: Email not valid' });
+        return
+      }
+     
+      return  res.status(500).json({success:false,message:'Internal Server Error'})
+    }
+  }
 }
 
 export default UserController;
