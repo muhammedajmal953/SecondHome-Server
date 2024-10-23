@@ -19,3 +19,6 @@ export interface UserDoc  extends Document{
   isKYCVerified: boolean
   lisence: string
 }
+
+
+

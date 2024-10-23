@@ -8,6 +8,7 @@ import { HostelRepository } from "../repositories/hostelRepository";
 import { HostelService } from "../services/hostelService";
 import { HostelController } from "../controllers/hostelController";
 import { userAuth } from "../middlewares/userAuthMiddleWare";
+import { USER_ROUTES } from "../constants/routes-constants";
 
 const userRepository = new UserRepository();
 const otpRepository = new OtpRepository();
@@ -25,33 +26,31 @@ const userRouter = Router();
 
 
 
-userRouter.post('/sign-up', userController.createUser.bind(userController))
+userRouter.post(USER_ROUTES.SIGN_UP, userController.createUser.bind(userController))
 
-userRouter.post('/verify-otp',userController.verifyUser.bind(userController))
+userRouter.post(USER_ROUTES.VERIFY_OTP,userController.verifyUser.bind(userController))
 
-userRouter.post('/login',userController.loginUser.bind(userController))
+userRouter.post(USER_ROUTES.LOGIN,userController.loginUser.bind(userController))
 
-userRouter.post('/google-login', userController.singleSignIn.bind(userController))
+userRouter.post(USER_ROUTES.GOOGLE_LOGIN, userController.singleSignIn.bind(userController))
 
-userRouter.post('/forgot-password', userController.forgotPassword.bind(userController))
-userRouter.post('/change-password', userController.changePassword.bind(userController))
+userRouter.post(USER_ROUTES.FORGOT_PASSWORD, userController.forgotPassword.bind(userController))
 
-userRouter.get('/getUser',userAuth, userController.getUser.bind(userController))
+userRouter.post(USER_ROUTES.CHANGE_PASSWORD, userController.changePassword.bind(userController))
 
-userRouter.put('/edit-profile',userAuth, upload.single('avatar'), userController.editProfile.bind(userController))
+userRouter.get(USER_ROUTES.GET_USER,userAuth, userController.getUser.bind(userController))
 
-userRouter.get('/getAllHostel/:page',userAuth,hostelController.getAllHostel.bind(hostelController))
+userRouter.put(USER_ROUTES.EDIT_PROFILE,userAuth, upload.single('avatar'), userController.editProfile.bind(userController))
 
-userRouter.put('/changePassword', userAuth, userController.newPassword.bind(userController))
+userRouter.get(USER_ROUTES.GET_ALL_HOSTEL,userAuth,hostelController.getAllHostel.bind(hostelController))
 
-userRouter.get('/token',userController.refreshToken.bind(userController))
+userRouter.put(USER_ROUTES.CHANGE_PASSWORD_NEW, userAuth, userController.newPassword.bind(userController))
 
-userRouter.post('/resend-otp',userController.resendOtp.bind(userController))
+userRouter.get(USER_ROUTES.TOKEN,userController.refreshToken.bind(userController))
+
+userRouter.post(USER_ROUTES.RESEND_OTP, userController.resendOtp.bind(userController))
+
+userRouter.get(USER_ROUTES.GET_HOSTEL,userAuth,hostelController.getHostelWithOwner.bind(hostelController))
 
 
-
-
-
- 
-
-export default userRouter 
+export default userRouter    

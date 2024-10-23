@@ -1,4 +1,4 @@
-import { Request, Response } from "express"
+import {Request,Response } from "express"
 import { VendorService } from "../services/vendorServices"
 import UserRepository from "../repositories/userRepository";
 
@@ -50,7 +50,7 @@ class VendorController {
     async loginVendor(req: Request, res: Response) {
         try {
             console.log('logged in body', req.body);
-            let user = req.body
+            const user = req.body
             const result = await this.vendorService.loginVendor(user)
             if (!result?.success) {
                 return res.status(200).json(result)
@@ -76,7 +76,7 @@ class VendorController {
 
     async changePasswordVendor(req: Request, res: Response) { 
         try {
-            let result =await this.vendorService.changePasswordVendor(req.body.email, req.body.password)
+            const result =await this.vendorService.changePasswordVendor(req.body.email, req.body.password)
             return res.status(200).json(result)
         } catch (error) {
             console.error(error);
@@ -92,7 +92,7 @@ class VendorController {
                 return res.status(400).json({ success: false, message: 'File not found' })
              }
             
-            let result =await this.vendorService.kycUpload(req.body.email,req.file)
+            const result =await this.vendorService.kycUpload(req.body.email,req.file)
             return res.status(200).json(result)
         } catch (error) {
             console.error(error);
@@ -102,8 +102,8 @@ class VendorController {
 
     async getVendorDetails(req: Request, res: Response) { 
         try {
-            let bearer = req.headers.authorization!
-            let token=bearer.split(' ')[1]
+            const bearer = req.headers.authorization!
+            const token=bearer.split(' ')[1]
         
             if (!token) {
                 console.log("token not found");
@@ -121,11 +121,11 @@ class VendorController {
     async editProfile(req: Request, res: Response) {
         try {
         
-            let bearer = req.headers.authorization!
-            let token=bearer.split(' ')[1]
+            const bearer = req.headers.authorization!
+            const token=bearer.split(' ')[1]
             
             
-            let data = req.body
+            const data = req.body
 
             let file: Express.Multer.File 
             if(req.file){
@@ -138,7 +138,7 @@ class VendorController {
                 return res.status(400).json({ success: false, message: 'Token not found' })
             }
 
-            let result =await this.vendorService.editProfile(token,data,file!)  
+            const result =await this.vendorService.editProfile(token,data,file!)  
             return res.status(200).json(result)
         } catch (error) { 
             console.error(error);
@@ -149,7 +149,7 @@ class VendorController {
     
     async newPassword(req:Request,res:Response) {
         try {
-          let data = req.body
+          const data = req.body
           if (!data) {
             return res.status(400).json({
               success: false,
@@ -157,10 +157,10 @@ class VendorController {
               data:null
             })
           }
-            let bearer = req.headers.authorization!;
-            let token = bearer.split(" ")[1];
+            const bearer = req.headers.authorization!;
+            const token = bearer.split(" ")[1];
     
-            let result = await this.vendorService.newPassWord(data, token)
+            const result = await this.vendorService.newPassWord(data, token)
             res.status(200).json(result)
           
           
@@ -175,29 +175,32 @@ class VendorController {
     
     async refreshToken(req: Request, res: Response) {
         try {
-            let { refreshToken } = req.params
+            const { refreshToken } = req.params
             if (!refreshToken) {
                 return res.status(401).json({
                     message:'unautherised:no token provided'
                 })
             }
-            const result = this.vendorService.refreshToken(refreshToken)
+            const result =await this.vendorService.refreshToken(refreshToken)
             return res.status(200).json(result)
             
-        } catch (error:any) {
+        } catch (error:unknown) {
             console.error("Error in VendorController.refreshToken:", error);
-            if(error.message === 'Token expired' || error.name === 'Token verification failed'){
-                res.status(401).json({ message: 'Unauthorized: Token expired' });
-                return
-            }else{
-                res.status(500).json({ error: "Internal server error" });
+            if (error instanceof Error) {
+                
+                if(error.message === 'Token expired' || error.name === 'Token verification failed'){
+                    res.status(401).json({ message: 'Unauthorized: Token expired' });
+                    return
+                }
             }
+                res.status(500).json({ error: "Internal server error" });
+            
         }
     }
 
     async resendOtp(req: Request, res: Response) {
         try {
-          let { email } = req.body
+          const { email } = req.body
             console.log(email);
             
             console.log('vendor resend otp controller reched' ,email);
@@ -209,18 +212,35 @@ class VendorController {
     
           
           
-         let result=this.vendorService.resendOtp(email)
+         const result=this.vendorService.resendOtp(email)
           return res.status(200).json(result)
-        } catch (error: any) {
-          console.error("Error in user resend otp controler:",error);
-          if (error.message === 'NO User Found') {
-            res.status(401).json({ message: 'Unauthorized: Email not valid' });
-            return
-          }
+        } catch (error: unknown) {
+            console.error("Error in user resend otp controler:", error);
+            if (error instanceof Error) {
+                if (error.message === 'NO User Found') {
+                  res.status(401).json({ message: 'Unauthorized: Email not valid' });
+                  return
+                }
+            }
          
           return  res.status(500).json({success:false,message:'Internal Server Error'})
         }
-      }
-}
+    }
+    
+   async getmyHostels(req:Request,res:Response) {
+       try {
+           const { page } = req.params
+           const { searchQuery } = req.query
+           const bearer = req.headers.authorization!
+           const token=bearer.split(' ')[1]
+           
+           const result = await this.vendorService.getAllHostels(Number(page), searchQuery as string, token)
+           return res.status(200).json(result)
+
+       } catch (error) {
+        console.log(error);
+       }
+   }
+} 
 
 export default VendorController 

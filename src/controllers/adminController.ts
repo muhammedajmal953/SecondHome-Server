@@ -29,11 +29,11 @@ export class AdminController {
 
     async getAllUsers(req: Request, res: Response) {
         try {
-            let { page, limit } = req.params;
+            const { page, limit } = req.params;
             const newPage = Number(page) || 1;
             const newLimit = Number(limit) || 10;
             const { searchQuery } = req.query
-            let name=searchQuery as string
+            const name=searchQuery as string
            
             console.log('get all Users search query',searchQuery);
 
@@ -48,12 +48,12 @@ export class AdminController {
 
     async getAllVendors(req: Request, res: Response) {
         try {
-            let { page, limit } = req.params;
+            const { page, limit } = req.params;
             const newPage = Number(page) || 1;
             const newLimit = Number(limit) || 10;
 
             const { searchQuery } = req.query
-            let name=searchQuery as string
+            const name=searchQuery as string
            
             console.log('get all Users search query',searchQuery);
             
@@ -119,13 +119,14 @@ export class AdminController {
             const result = await this.adminService.verifyVendor(id)
             return res.status(200).json(result)
         } catch (error) {
+            console.error('error from verify vendor admin controller',error)
             return res.status(500).json({ success: false, message: 'Internal server error' })
         }
     }
 
     async refreshToken(req: Request, res: Response) {
         try {
-            let { refreshToken } = req.params
+            const { refreshToken } = req.params
             if (!refreshToken) {
                 return res.status(401).json({
                     message:'unautherised:no token provided'
@@ -134,14 +135,18 @@ export class AdminController {
             const result = this.adminService.refreshToken(refreshToken)
             return res.status(200).json(result)
             
-        } catch (error:any) {
+        } catch (error:unknown) {
             console.error("Error in VendorController.refreshToken:", error);
-            if(error.message === 'Token expired' || error.name === 'Token verification failed'){
-                res.status(401).json({ message: 'Unauthorized: Token expired' });
-                return
-            }else{
+            if (error instanceof Error) {
+           
+                if(error.message === 'Token expired' || error.name === 'Token verification failed'){
+                    res.status(401).json({ message: 'Unauthorized: Token expired' });
+                    return
+                }
+           }
                 res.status(500).json({ error: "Internal server error" });
-            }
+            
         }
     }
+    
 }

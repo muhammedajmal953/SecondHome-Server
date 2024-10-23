@@ -5,12 +5,10 @@ import OtpRepository from "../repositories/otpRepository";
 import bcrypt from "bcryptjs";
 import sendMail from "../utils/mailer";
 import { generateRefreshToken, generateToken, verifyToken } from "../utils/jwt";
-import { OAuth2Client, TokenPayload } from "google-auth-library";
+import { OAuth2Client } from "google-auth-library";
 import User from "../models/userModel";
-import { token } from "morgan";
 import { uploadToS3 } from "../utils/s3Bucket";
-import { log } from "util";
-import { OtpDoc } from "../interfaces/IOtp";
+
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -24,7 +22,7 @@ export class UserService {
   }
 
   async createUser(user: UserDoc) {
-    let email = user.Email;
+    const email = user.Email;
     const existingEmail = await this.userRepository.getUserByEmail(email);
     if (existingEmail) {
       return {
@@ -36,7 +34,7 @@ export class UserService {
     console.log("reach the service");
 
     const salt = bcrypt.genSaltSync(10);
-    let Password: any = user.Password;
+    const Password: string = user.Password;
 
     user.Password = bcrypt.hashSync(Password, salt);
 
@@ -55,7 +53,7 @@ export class UserService {
 
     sendMail("Second Home", "OTP", newUser.Email, newOtp);
 
-    let newOtpData = {
+    const newOtpData = {
       Email: email,
       Otp: newOtp,
       CreatedAt: new Date(),
@@ -63,7 +61,7 @@ export class UserService {
       isUpdated: false,
     }
 
-    const otp = await this.otpRepository.create(newOtpData);
+    await this.otpRepository.create(newOtpData);
 
     return {
       success: true,
@@ -72,7 +70,7 @@ export class UserService {
   }
 
   async verifyUser(otp: string, email: string) {
-    let otpData = await this.otpRepository.getOtpByEmail(email);
+    const otpData = await this.otpRepository.getOtpByEmail(email);
     if (!otpData) {
       console.log("otp not found");
       return {
@@ -120,7 +118,7 @@ export class UserService {
 
 
 
-    const updateOtp = await this.otpRepository.update(existingOtp?._id as string,{Otp:""});
+    await this.otpRepository.update(existingOtp?._id as string,{Otp:""});
     return {
       success: true,
       message: "User verified successfully",
@@ -166,7 +164,7 @@ export class UserService {
           };
         }
 
-        let newUser = new User({
+        const newUser = new User({
           Email: email,
           First_name: given_name,
           Last_name: family_name,
@@ -192,9 +190,9 @@ export class UserService {
     }
   }
 
-  async loginUser(user: any) {
+  async loginUser(user: {[key:string]:unknown}) {
     try {
-      const userExist = await this.userRepository.getUserByEmail(user.Email);
+      const userExist = await this.userRepository.getUserByEmail(user.Email as string);
 
       if (!userExist) {
         console.error("User not found");
@@ -205,10 +203,10 @@ export class UserService {
         };
       }
       //get form values in array
-      let values: string[] = Object.values(user);
+      const values: unknown[] = Object.values(user);
     
       const passwordMatch: boolean = bcrypt.compareSync(
-        values[1],
+        values[1] as string,
         userExist?.Password
       );
 
@@ -264,7 +262,7 @@ export class UserService {
     try {
       console.log("before user service");
 
-      let user = await this.userRepository.getUserByEmail(email);
+      const user = await this.userRepository.getUserByEmail(email);
       console.log("email at forgot service", email);
 
       if (!user) {
@@ -281,11 +279,11 @@ export class UserService {
         Otp: newOtp,
         ExpiresAt: new Date(Date.now() + 600000) 
       };
-      let existingOtp = await this.otpRepository.getOtpByEmail(email)
+      const existingOtp = await this.otpRepository.getOtpByEmail(email)
 
 
 
-    const updateOtp = await this.otpRepository.update(existingOtp?._id as string,otpData);
+     await this.otpRepository.update(existingOtp?._id as string,otpData);
 
       console.log(newOtp, "the forgot password otp");
 
@@ -306,7 +304,7 @@ export class UserService {
 
   async forgotOtpHandle(email: string, otp: string) {
     try {
-      let otpData = await this.otpRepository.getOtpByEmail(email);
+      const otpData = await this.otpRepository.getOtpByEmail(email);
       if (!otpData) {
         console.log("otp not found");
         return {
@@ -332,7 +330,7 @@ export class UserService {
           data: null,
         };
       }
-      let updateOtp=await this.otpRepository.update(otpData._id as string,{Otp:''})
+      await this.otpRepository.update(otpData._id as string,{Otp:''})
       return {
         success: true,
         message: "OTP verified",
@@ -359,7 +357,7 @@ export class UserService {
           message:'No User Found'
         }
       }
-     let id:string=userExist?._id as string
+     const id:string=userExist?._id as string
       const user = await this.userRepository.update(id, {
         Password: hashedPassword,
       });
@@ -385,11 +383,11 @@ export class UserService {
   async getUser(token: string) {
     try {
       console.log("getUser");
-      let payload = verifyToken(token);
+      const payload = verifyToken(token);
 
-      let id = JSON.parse(JSON.stringify(payload)).payload;
+      const id = JSON.parse(JSON.stringify(payload)).payload;
 
-      let user = await this.userRepository.findById(id._id);
+      const user = await this.userRepository.findById(id._id);
 
       return {
         success: true,
@@ -406,11 +404,11 @@ export class UserService {
     }
   }
 
-  async editProfile(token: string, updates: any, file: Express.Multer.File) {
+  async editProfile(token: string, updates: {[key:string]:unknown}, file: Express.Multer.File) {
     try {
-      let payload = verifyToken(token);
+      const payload = verifyToken(token);
 
-      let id = JSON.parse(JSON.stringify(payload)).payload;
+      const id = JSON.parse(JSON.stringify(payload)).payload;
 
       console.log("user edit payload", id);
 
@@ -430,7 +428,7 @@ export class UserService {
 
       console.log(updates);
 
-      let result = await this.userRepository.update(id._id, updates);
+      const result = await this.userRepository.update(id._id, updates);
 
       if (!result) {
         return {
@@ -456,17 +454,17 @@ export class UserService {
     }
   }
 
-  async newPassWord(data: any, token: string) {
+  async newPassWord(data: {[key:string]:string}, token: string) {
     try {
-      let { oldPassword, newPassword } = data;
-      let payload = verifyToken(token);
+      const { oldPassword, newPassword } = data;
+      const payload = verifyToken(token);
 
-      let id = JSON.parse(JSON.stringify(payload)).payload;
+      const id = JSON.parse(JSON.stringify(payload)).payload;
 
       console.log('_id from change password',payload);
       
 
-      let existingUser = await this.userRepository.findById(id._id);
+      const existingUser = await this.userRepository.findById(id._id);
 
       if (!existingUser) {
         return {
@@ -475,9 +473,9 @@ export class UserService {
         };
     }
 
-      let passwordMatch: boolean = bcrypt.compareSync(
+      const passwordMatch: boolean = bcrypt.compareSync(
         oldPassword,
-        existingUser?.Password!
+        existingUser.Password!
       );
 
       if (!passwordMatch) {
@@ -491,7 +489,7 @@ export class UserService {
 
         const hashedPassword = bcrypt.hashSync(newPassword, salt);
 
-        let result=await this.userRepository.update(id,{Password:hashedPassword})
+        const result=await this.userRepository.update(id,{Password:hashedPassword})
       
       return {
         success:true,
@@ -510,7 +508,7 @@ export class UserService {
 
   async refreshToken(token:string) {
     try {
-      let payload = verifyToken(token)
+      const payload = verifyToken(token)
       const decoded = JSON.parse(JSON.stringify(payload)).payload
       
       const userData = await this.userRepository.findById(decoded._id)
@@ -519,7 +517,7 @@ export class UserService {
       if (!userData.IsActive) throw new Error("Token verification failed")
       
       const accessToken =generateToken(userData)
-      const refreshToken = generateToken(userData)
+      const refreshToken = generateRefreshToken(userData)
       
       return{ success:true,message:'Token refreshed successfully',data:{accessToken,refreshToken}}
     } catch (error) {
@@ -530,13 +528,13 @@ export class UserService {
 
   async resendOtp(email: string) {
     try {
-      let registeredUser = await this.userRepository.getUserByEmail(email)
+      const registeredUser = await this.userRepository.getUserByEmail(email)
       
       if (!registeredUser) {
         return {success:false,message:'No user Found'}
       }
 
-      let otp = generateOtp()
+      const otp = generateOtp()
       sendMail("secondHome", "Resended Otp", email, otp);
       console.log('resend otp', otp);
       console.log(email);
@@ -545,11 +543,11 @@ export class UserService {
         Otp: otp,
         ExpiresAt: new Date(Date.now() + 600000) // Expires in 10 minutes
       };
-      let existingOtp = await this.otpRepository.getOtpByEmail(email)
+      const existingOtp = await this.otpRepository.getOtpByEmail(email)
 
 
 
-      const updateOtp = await this.otpRepository.update(existingOtp?._id as string,otpData);  
+      await this.otpRepository.update(existingOtp?._id as string,otpData);  
       return {
         success: true,
         message:'otp resend successfully'
@@ -559,4 +557,6 @@ export class UserService {
       
     }
   }
+
+ 
 }

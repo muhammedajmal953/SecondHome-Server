@@ -1,3 +1,4 @@
+import { UserDoc } from "../interfaces/IUser";
 import UserRepository from "../repositories/userRepository";
 import { generateRefreshToken, generateToken, verifyToken } from "../utils/jwt";
 import bcrypt from "bcryptjs";
@@ -5,11 +6,9 @@ import bcrypt from "bcryptjs";
 
 export class AdminServices{
     constructor(private userRepository: UserRepository){}
-    async loginUser(admin: any) {
+    async loginUser(admin: Partial<UserDoc>) {
         try { 
-           
-            
-            const adminExist = await this.userRepository.getUserByEmail(admin.Email);
+            const adminExist = await this.userRepository.getUserByEmail(admin.Email!);
     
             if (!adminExist) {
                 console.error("admin not found");
@@ -21,7 +20,7 @@ export class AdminServices{
             }
     
             //get elements from the object
-            let values: string[] = Object.values(admin)
+            const values: string[] = Object.values(admin)
             
             const passwordMatch: boolean = bcrypt.compareSync(
                 values[1],
@@ -68,8 +67,8 @@ export class AdminServices{
 
     async getAllUsers(name:string,page: number, limit: number) {
       
-        let newLimit = limit * (page - 1)
-        let filter:any={ Role: 'User' }
+        const newLimit = limit * (page - 1)
+        const filter:{[key:string]:unknown}={ Role: 'User' }
         if (name) {
             filter['$or'] = [
                 { First_name: { $regex: name, $options: 'i' } },
@@ -77,7 +76,7 @@ export class AdminServices{
             ]
         }
        
-        let users = await this.userRepository.findAll(filter, newLimit)
+        const users = await this.userRepository.findAll(filter, newLimit)
         return {
             success: true,
             message: "Users fetched successfully",
@@ -86,15 +85,15 @@ export class AdminServices{
     }
     async getAllVendors(name:string,page: number, limit: number) {
       
-        let newLimit = limit * (page - 1)
-        let filter:any={ Role: 'Vendor' }
+        const newLimit = limit * (page - 1)
+        const filter:{[key:string]:unknown}={ Role: 'Vendor' }
         if (name) {
             filter['$or'] = [
                 { First_name: { $regex: name, $options: 'i' } },
                 {Email:{$regex:name,$options:'i'}},
             ]
         }
-        let users = await this.userRepository.findAll(filter, newLimit)
+        const users = await this.userRepository.findAll(filter, newLimit)
         
         return {
             success: true,
@@ -104,7 +103,7 @@ export class AdminServices{
     }
     
     async blockUser(id: string) {
-        let user = await this.userRepository.findById(id)
+        const user = await this.userRepository.findById(id)
         
         if(!user){
             return {
@@ -123,7 +122,7 @@ export class AdminServices{
         }
     }
     async unBlockUser(id: string) {
-        let user = await this.userRepository.findById(id)
+        const user = await this.userRepository.findById(id)
         
         if(!user){
             return {
@@ -144,7 +143,7 @@ export class AdminServices{
 
     async verifyVendor(_id: string) {
         try {
-            let verification = await this.userRepository.update(_id,{isKYCVerified:true})
+            const verification = await this.userRepository.update(_id,{isKYCVerified:true})
 
             if (!verification) { 
               
@@ -161,14 +160,14 @@ export class AdminServices{
                 data: verification,
             }
         } catch (error) {
-            
+            console.error('Error from adminService.verifyVendor',error)
         }
 
     }
 
     async refreshToken(token:string) {
         try {
-          let payload = verifyToken(token)
+          const payload = verifyToken(token)
           const decoded = JSON.parse(JSON.stringify(payload)).payload
           
           const userData = await this.userRepository.findById(decoded._id)
@@ -177,7 +176,7 @@ export class AdminServices{
           if (!userData.IsAdmin) throw new Error("Token verification failed")
           
           const accessToken =generateToken(userData)
-          const refreshToken = generateToken(userData)
+          const refreshToken = generateRefreshToken(userData)
           
           return{ success:true,message:'Token refreshed successfully',data:{accessToken,refreshToken}}
         } catch (error) {

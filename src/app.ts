@@ -4,10 +4,10 @@ import dotenv from 'dotenv';
 import connectDB from './db';
 import morgan from 'morgan';
 import userRouter from './routes/userRoutes';
-import sendMail from './utils/mailer';
+
 import venderRouter from './routes/vendorRoutes';
 import adminRouter from './routes/adminRoutes';
-import fs, { existsSync, unlink } from 'fs'
+import fs from 'fs'
 import { job } from './utils/cronJob';
 import path from 'path';
 
@@ -34,7 +34,7 @@ const appLogStream = fs.createWriteStream(path.join(loginDirectory, `${fileName}
  
 
 app.use(morgan('combined', { stream: appLogStream }))
-app.use(morgan('dev'))
+// app.use(morgan('dev'))
    
 app.use('/',userRouter)
 app.use('/vendor', venderRouter)

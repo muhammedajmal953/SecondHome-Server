@@ -1,9 +1,7 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/userServices";
-import OtpRepository from "../repositories/otpRepository";
 import UserRepository from "../repositories/userRepository";
 
-const otpRepository = new OtpRepository();
 const userRepository = new UserRepository();
 class UserController {
   constructor(private userService: UserService) {
@@ -45,7 +43,7 @@ class UserController {
   async loginUser(req: Request, res: Response) {
     try {
       console.log("logged in body", req.body);
-      let user = req.body;
+      const user = req.body;
       const result = await this.userService.loginUser(user);
       if (!result?.success) {
         return res.status(400).json(result);
@@ -77,7 +75,7 @@ class UserController {
 
   async changePassword(req: Request, res: Response) {
     try {
-      let result = await this.userService.changePassword(
+      const result = await this.userService.changePassword(
         req.body.email,
         req.body.password
       );
@@ -86,14 +84,13 @@ class UserController {
       console.log(error);
       return res.status(500).json({ success: false, message: error });
     }
-  } 
+  }
 
   async getUser(req: Request, res: Response) {
     try {
       let token = req.headers.authorization!;
 
-       token = token.split(" ")[1];
-
+      token = token.split(" ")[1];
 
       const result = await this.userService.getUser(token);
       return res.status(200).json(result);
@@ -104,28 +101,27 @@ class UserController {
 
   async editProfile(req: Request, res: Response) {
     try {
-      let bearer = req.headers.authorization!;
-      let token = bearer.split(" ")[1];
+      const bearer = req.headers.authorization!;
+      const token = bearer.split(" ")[1];
 
-      let data = req.body;
+      const data = req.body;
 
-      console.log('asdfasdf',req.body);
-      
+      console.log("asdfasdf", req.body);
 
       let file: Express.Multer.File;
       if (req.file) {
-        file = req.file;   
-      } 
+        file = req.file;
+      }
 
       if (!token) {
-        console.log("token not found"); 
+        console.log("token not found");
 
         return res
           .status(400)
           .json({ success: false, message: "Token not found" });
       }
 
-      let result = await this.userService.editProfile(token, data, file!);
+      const result = await this.userService.editProfile(token, data, file!);
       return res.status(200).json(result);
     } catch (error) {
       console.error(error);
@@ -133,77 +129,87 @@ class UserController {
     }
   }
 
-  async newPassword(req:Request,res:Response) {
+  async newPassword(req: Request, res: Response) {
     try {
-      let data = req.body
-      
+      const data = req.body;
+
       if (!data) {
         return res.status(400).json({
           success: false,
-          message: 'no data found',
-          data:null
-        })
+          message: "no data found",
+          data: null,
+        });
       }
-        let bearer = req.headers.authorization!;
-        let token = bearer.split(" ")[1];
+      const bearer = req.headers.authorization!;
+      const token = bearer.split(" ")[1];
 
-        let result = await this.userService.newPassWord(data, token)
-        res.status(200).json(result)
-      
-      
+      const result = await this.userService.newPassWord(data, token);
+      res.status(200).json(result);
     } catch (error) {
       console.log(error);
       res.json(500).json({
         success: false,
-        message:'Internal Server Error'
-      })
+        message: "Internal Server Error",
+      });
     }
   }
 
   async refreshToken(req: Request, res: Response) {
     try {
-        let { refreshToken } = req.params
-        if (!refreshToken) {
-            return res.status(401).json({
-                message:'unautherised:no token provided'
-            })
+      const { refreshToken } = req.params;
+      if (!refreshToken) {
+        return res.status(401).json({
+          message: "unautherised:no token provided",
+        });
+      }
+      console.log(refreshToken);
+      
+      const result =await this.userService.refreshToken(refreshToken);
+      return res.status(200).json(result);
+    } catch (error: unknown) {
+      console.error("Error in VendorController.refreshToken:", error);
+      if (error instanceof Error) {
+        if (
+          error.message === "Token expired" ||
+          error.name === "Token verification failed"
+        ) {
+          res.status(401).json({ message: "Unauthorized: Token expired" });
+          return;
         }
-        const result = this.userService.refreshToken(refreshToken)
-        return res.status(200).json(result)
-    } catch (error:any) {
-        console.error("Error in VendorController.refreshToken:", error);
-        if(error.message === 'Token expired' || error.name === 'Token verification failed'){
-            res.status(401).json({ message: 'Unauthorized: Token expired' });
-            return
-        }else{
-            res.status(500).json({ error: "Internal server error" });
-        }
+      }
+      res.status(500).json({ error: "Internal server error" });
     }
   }
-  
+
   async resendOtp(req: Request, res: Response) {
     try {
-      let { email } = req.body
+      const { email } = req.body;
       console.log(email);
-      
+
       if (!email) {
-        return res.status(401).json({ success: false,message:'UnAutherised Approach'})
+        return res
+          .status(401)
+          .json({ success: false, message: "UnAutherised Approach" });
       }
 
-      
-      
-     let result=this.userService.resendOtp(email)
-      return res.status(200).json(result)
-    } catch (error: any) {
-      console.error("Error in user resend otp controler:",error);
-      if (error.message === 'NO User Found') {
-        res.status(401).json({ message: 'Unauthorized: Email not valid' });
-        return
+      const result = this.userService.resendOtp(email);
+      return res.status(200).json(result);
+    } catch (error: unknown) {
+      console.error("Error in user resend otp controler:", error);
+      if (error instanceof Error) {
+        if (error.message === "NO User Found") {
+          res.status(401).json({ message: "Unauthorized: Email not valid" });
+          return;
+        }
       }
-     
-      return  res.status(500).json({success:false,message:'Internal Server Error'})
+
+      return res
+        .status(500)
+        .json({ success: false, message: "Internal Server Error" });
     }
   }
+
+  
 }
 
 export default UserController;

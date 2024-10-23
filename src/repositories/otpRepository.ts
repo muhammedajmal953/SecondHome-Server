@@ -7,10 +7,16 @@ class OtpRepository extends BaseRepository<OtpDoc>{
     constructor() {
         super(otpModel)
     }
-    getOtpByEmail(email: string): Promise<OtpDoc | null> {
-        console.log('reach the repo');
-        return otpModel.findOne({ Email: email })
+    async getOtpByEmail(email: string): Promise<OtpDoc | null> {
+        try {
+            console.log('Reached the repository');
+            return await otpModel.findOne({ Email: email });
+        } catch (error) {
+            console.error("Error fetching OTP by email:", error);
+            throw new Error("Could not fetch OTP by email");
+        }
     }
+    
 }
 
 export default OtpRepository

@@ -25,9 +25,11 @@ export const adminAuth=(req: Request,res:Response,next:NextFunction)=>{
         }
         next()
         
-    } catch (error:any) {
-        if (error.message === 'Token expired') {  
-            return res.status(401).json({ message: 'Unauthorized: Token expired' });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            if (error.message === 'Token expired') {  
+                return res.status(401).json({ message: 'Unauthorized: Token expired' });
+            }
         }
         return res.status(403).json({ message: 'Forbidden: Invalid token' }); 
     }

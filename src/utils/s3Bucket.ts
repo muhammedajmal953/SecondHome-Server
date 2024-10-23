@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, PutObjectCommandInput } from "@aws-sdk/client-s3";
+import { S3Client } from "@aws-sdk/client-s3";
 import {Upload} from "@aws-sdk/lib-storage";
 
 
@@ -42,7 +42,7 @@ export const uploadToS3 = async (
             partSize: parallelUploadOptions.partSize,
         });
 
-        const response = await upload.done();
+       await upload.done();
         
         const fileUrl = `https://${bucketName}.s3.amazonaws.com/${key}`;
         return fileUrl

@@ -37,12 +37,15 @@ const HostelModel = new mongoose.Schema<IHostel>({
         default:new Date
     },
     isDeleted: Boolean,
-    isActive: Boolean,
+    isActive: {
+        type: Boolean,
+        default:true
+    },
     category: String,
     owner: ObjectId,
     advance:Number
 })
 
-let Hostel= mongoose.model<IHostel>("Hostel", HostelModel)
+const Hostel= mongoose.model<IHostel>("Hostel", HostelModel)
 export default Hostel
 

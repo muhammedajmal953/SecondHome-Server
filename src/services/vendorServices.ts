@@ -8,23 +8,25 @@ import sendMail from "../utils/mailer";
 import { generateRefreshToken, generateToken, verifyToken } from "../utils/jwt";
 import User from "../models/userModel";
 import { uploadToS3 } from "../utils/s3Bucket";
-import { readFileSync } from "fs";
-import { error, log } from "console";
+import { HostelRepository } from "../repositories/hostelRepository";
+
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export class VendorService {
   constructor(
-    private userRepository: UserRepository,
-    private otpRepository: OtpRepository
+    private _userRepository: UserRepository,
+    private _otpRepository: OtpRepository,
+    private _hostelRepository:HostelRepository
   ) {
-    this.userRepository = userRepository;
-    this.otpRepository = otpRepository;
+    this._userRepository = _userRepository;
+    this._otpRepository = _otpRepository;
+    this._hostelRepository = _hostelRepository;
   }
 
   async createVendor(user: UserDoc) {
-    let email = user.Email;
-    const existingEmail = await this.userRepository.getUserByEmail(email);
+    const email = user.Email;
+    const existingEmail = await this._userRepository.getUserByEmail(email);
     if (existingEmail) {
       return {
         success: false,
@@ -35,13 +37,13 @@ export class VendorService {
     console.log("reach the service");
 
     const salt = bcrypt.genSaltSync(10);
-    let Password: any = user.Password;
+    const Password: string = user.Password;
 
     user.Password = bcrypt.hashSync(Password, salt);
 
     user.Role = "Vendor";
 
-    const newUser = await this.userRepository.create(user);
+    const newUser = await this._userRepository.create(user);
     if (!newUser) {
       return {
         success: false,
@@ -54,7 +56,7 @@ export class VendorService {
 
     sendMail("Second Home", "OTP", newUser.Email, newOtp);
 
-    const otp = await this.otpRepository.create({
+    await this._otpRepository.create({
       Email: email,
       Otp: newOtp,
       CreatedAt: new Date(),
@@ -69,7 +71,7 @@ export class VendorService {
   }
 
   async verifyVendor(otp: string, email: string) {
-    let otpData = await this.otpRepository.getOtpByEmail(email);
+    const otpData = await this._otpRepository.getOtpByEmail(email);
     if (!otpData) {
       console.log("otp not found");
       return {
@@ -96,7 +98,7 @@ export class VendorService {
       };
     }
 
-    const user = await this.userRepository.getUserByEmail(email);
+    const user = await this._userRepository.getUserByEmail(email);
 
     if (!user) {
       console.log("user not found");
@@ -113,8 +115,8 @@ export class VendorService {
 
     const token = generateToken(user);
     const refreshToken=generateRefreshToken(user)
-    let existingOtp = await this.otpRepository.getOtpByEmail(email)
-    const updateOtp = await this.otpRepository.update(existingOtp?._id as string,{Otp:""});
+    const existingOtp = await this._otpRepository.getOtpByEmail(email)
+    await this._otpRepository.update(existingOtp?._id as string,{Otp:""});
     return {
       success: true,
       message: "User verified successfully",
@@ -137,7 +139,7 @@ export class VendorService {
       if (payload) {
         const { email, given_name, family_name } = payload;
 
-        const existingEmail = await this.userRepository.getUserByEmail(email!);
+        const existingEmail = await this._userRepository.getUserByEmail(email!);
 
         if (existingEmail && existingEmail.Password) {
           return {
@@ -157,7 +159,7 @@ export class VendorService {
           };
         }
 
-        let newUser = new User({
+        const newUser = new User({
           Email: email,
           First_name: given_name,
           Last_name: family_name,
@@ -185,9 +187,9 @@ export class VendorService {
     }
   }
 
-  async loginVendor(user: any) {
+  async loginVendor(user: {[key:string]:string}) {
     try {
-      const userExist = await this.userRepository.getUserByEmail(user.Email);
+      const userExist = await this._userRepository.getUserByEmail(user.Email);
 
       if (!userExist) {
         console.error("User not found");
@@ -199,7 +201,7 @@ export class VendorService {
       }
 
       console.log("Logging in user:", user);
-      let values: string[] = Object.values(user);
+      const values: string[] = Object.values(user);
       console.log("Incoming password:", values[1]);
       console.log("Saved hash:", userExist?.Password);
 
@@ -276,7 +278,7 @@ export class VendorService {
     try {
       console.log("before user service");
 
-      let user = await this.userRepository.getUserByEmail(email);
+      const user = await this._userRepository.getUserByEmail(email);
       console.log("email at forgot service", email);
 
       if (!user) {
@@ -301,8 +303,8 @@ export class VendorService {
         Otp: newOtp,
         ExpiresAt: new Date(Date.now() + 600000) // Expires in 10 minutes
       };
-      let existingOtp = await this.otpRepository.getOtpByEmail(email)
-      const updateOtp = await this.otpRepository.update(existingOtp?._id as string,otpData);
+      const existingOtp = await this._otpRepository.getOtpByEmail(email)
+       await this._otpRepository.update(existingOtp?._id as string,otpData);
 
       console.log(newOtp, "the forgot password otp");
 
@@ -321,14 +323,14 @@ export class VendorService {
     }
   }
 
-  async changePasswordVendor(email: string, password: {[key:string]:any}) {
+  async changePasswordVendor(email: string, password: {[key:string]:string}) {
     try {
       const salt = bcrypt.genSaltSync(10);
       console.log(password,'change password vendor');
       
       const hashedPassword = bcrypt.hashSync(password?.newPassword, salt);
 
-      const userExist =await this.userRepository.getUserByEmail(email)
+      const userExist =await this._userRepository.getUserByEmail(email)
       
       if (!userExist) {
         return {
@@ -336,8 +338,8 @@ export class VendorService {
           message:'No User Found'
         }
       }
-     let id:string=userExist?._id as string
-      const user = await this.userRepository.update(id, {
+     const id:string=userExist?._id as string
+      const user = await this._userRepository.update(id, {
         Password: hashedPassword,
       });
 
@@ -361,7 +363,7 @@ export class VendorService {
 
   async forgotOtpHandler(email: string, otp: string) {
     try {
-      let otpData = await this.otpRepository.getOtpByEmail(email);
+      const otpData = await this._otpRepository.getOtpByEmail(email);
       if (!otpData) {
         console.log("otp not found");
         return {
@@ -433,7 +435,7 @@ export class VendorService {
         };
       }
 
-      const userExist =await this.userRepository.getUserByEmail(email)
+      const userExist =await this._userRepository.getUserByEmail(email)
       
       if (!userExist) {
         return {
@@ -441,8 +443,8 @@ export class VendorService {
           message:'No User Found'
         }
       }
-     let id:string=userExist?._id as string
-      const result = await this.userRepository.update(id, {
+     const id:string=userExist?._id as string
+      const result = await this._userRepository.update(id, {
         lisence:imageUrl
       });
       if (!result) {
@@ -471,11 +473,11 @@ export class VendorService {
 
   async getVendorDtails(token: string) {
     try {
-      let payload = verifyToken(token);
+      const payload = verifyToken(token);
 
-      let id = JSON.parse(JSON.stringify(payload)).payload;
+      const id = JSON.parse(JSON.stringify(payload)).payload;
 
-      let user = await this.userRepository.findById(id._id);
+      const user = await this._userRepository.findById(id._id);
 
       return {
         success: true,
@@ -492,11 +494,11 @@ export class VendorService {
     }
   }
 
-  async editProfile(token: string, updates: any, file: Express.Multer.File) {
+  async editProfile(token: string, updates: {[key:string]:unknown}, file: Express.Multer.File) {
     try {
-      let payload = verifyToken(token);
+      const payload = verifyToken(token);
 
-      let id = JSON.parse(JSON.stringify(payload)).payload;
+      const id = JSON.parse(JSON.stringify(payload)).payload;
 
       if (file) {
         const bucketName = process.env.AWS_S3_BUCKET_NAME!;
@@ -512,7 +514,7 @@ export class VendorService {
         updates = { ...updates, Avatar: imageUrl };
       }
 
-      let result = await this.userRepository.update(id._id, updates);
+      const result = await this._userRepository.update(id._id, updates);
 
       if (!result) {
         return {
@@ -538,18 +540,18 @@ export class VendorService {
     }
   }
 
-  async newPassWord(data: any, token: string) {
+  async newPassWord(data:{oldPassword:string,newPassword:string}, token: string) {
     try {
-      let { oldPassword, newPassword } = data;
-      let payload = verifyToken(token);
+      const { oldPassword, newPassword } = data;
+      const payload = verifyToken(token);
 
-      let id = JSON.parse(JSON.stringify(payload)).payload;
+      const id = JSON.parse(JSON.stringify(payload)).payload;
 
-      let existingUser = await this.userRepository.findById(id._id);
+      const existingUser:UserDoc|null = await this._userRepository.findById(id._id);
 
-      let passwordMatch: boolean = bcrypt.compareSync(
+      const passwordMatch: boolean = bcrypt.compareSync(
         oldPassword,
-        existingUser?.Password!
+        existingUser?.Password as string
       );
 
       if (!passwordMatch) {
@@ -563,7 +565,7 @@ export class VendorService {
 
       const hashedPassword = bcrypt.hashSync(newPassword, salt);
 
-      let result = await this.userRepository.update(id, {Password:hashedPassword});
+      const result = await this._userRepository.update(id, {Password:hashedPassword});
 
       return {
         success: true,
@@ -580,16 +582,16 @@ export class VendorService {
   }
   async refreshToken(token:string) {
     try {
-      let payload = verifyToken(token)
+      const payload = verifyToken(token)
       const decoded = JSON.parse(JSON.stringify(payload)).payload
       
-      const userData = await this.userRepository.findById(decoded._id)
+      const userData = await this._userRepository.findById(decoded._id)
       
       if (!userData) return { success: false, message: 'Vendor Not found' }
       if (!userData.IsActive) throw new Error("Token verification failed")
       
       const accessToken =generateToken(userData)
-      const refreshToken = generateToken(userData)
+      const refreshToken = generateRefreshToken(userData)
       
       return{ success:true,message:'Token refreshed successfully',data:{accessToken,refreshToken}}
     } catch (error) {
@@ -600,13 +602,13 @@ export class VendorService {
 
   async resendOtp(email: string) {
     try {
-      let registeredUser = await this.userRepository.getUserByEmail(email)
+      const registeredUser = await this._userRepository.getUserByEmail(email)
       
       if (!registeredUser) {
         return {success:false,message:'No user Found'}
       }
 
-      let otp = generateOtp()
+      const otp = generateOtp()
       sendMail("secondHome", "Resended Otp", email, otp);
 
       console.log('vendor resend Otp:-',otp);
@@ -615,8 +617,8 @@ export class VendorService {
         Otp: otp,
         ExpiresAt: new Date(Date.now() + 600000) 
       };
-      let existingOtp = await this.otpRepository.getOtpByEmail(email)
-      const updateOtp = await this.otpRepository.update(existingOtp?._id as string,otpData);
+      const existingOtp = await this._otpRepository.getOtpByEmail(email)
+      await this._otpRepository.update(existingOtp?._id as string,otpData);
       return {
         success: true,
         message:'otp resend successfully'
@@ -624,6 +626,36 @@ export class VendorService {
     } catch (error) {
       console.error('Error from Userservice.resendOtp',error);  
     }
+  }
+
+ async getAllHostels(page:number,searchQuery:string,token:string) {
+    try {
+      const skip = (page - 1) * 5
+      const payload = verifyToken(token)
+      const decoded = JSON.parse(JSON.stringify(payload)).payload
+           
+      const filter: { [key: string]: unknown } = {
+        owner:decoded._id
+      }
+      
+      if (searchQuery) {
+          filter['$or'] = [
+              { name: { $regex: searchQuery, $options: 'i' } },
+              {category:{ $regex: searchQuery, $options:'i'}}
+          ] 
+      }
+      const hostels = await this._hostelRepository.findAll(filter, skip)
+      
+      return {
+        success: true,
+        message: 'hostel fetched successfully',
+        data:hostels
+      }
+    } catch (error) {
+      console.log(error);
+      
+    }
+    
   }
 }
 
