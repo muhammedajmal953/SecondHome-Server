@@ -4,13 +4,13 @@ import UserRepository from "../repositories/userRepository";
 
 const userRepository = new UserRepository();
 class VendorController {
-    constructor(private vendorService: VendorService) {
-        this.vendorService = vendorService
+    constructor(private _vendorService: VendorService) {
+        this._vendorService = _vendorService
     }
     
     async createVendor(req: Request, res: Response) {
         const newUser = req.body
-        const result = await this.vendorService.createVendor(newUser)
+        const result = await this._vendorService.createVendor(newUser)
 
         if (!result.success) {
             return res.status(400).json(result)
@@ -28,10 +28,10 @@ class VendorController {
         console.log('otp and email', otp, email);
         
       if (registeredUser&&registeredUser.isVerified===true) {
-          const result= await this.vendorService.forgotOtpHandler(email,otp);
+          const result= await this._vendorService.forgotOtpHandler(email,otp);
           return res.status(200).json(result);
       }
-        const result = await this.vendorService.verifyVendor(otp, email)
+        const result = await this._vendorService.verifyVendor(otp, email)
         return res.status(200).json(result)
     }
 
@@ -41,7 +41,7 @@ class VendorController {
 
             console.log('idtoken vendor cntrlr', PROVIDER_ID)
            
-            const result = await this.vendorService.singleSignInVendor(PROVIDER_ID)
+            const result = await this._vendorService.singleSignInVendor(PROVIDER_ID)
             return res.status(200).json(result)
         } catch (error) {
             console.error(error)
@@ -51,7 +51,7 @@ class VendorController {
         try {
             console.log('logged in body', req.body);
             const user = req.body
-            const result = await this.vendorService.loginVendor(user)
+            const result = await this._vendorService.loginVendor(user)
             if (!result?.success) {
                 return res.status(200).json(result)
             }
@@ -66,7 +66,7 @@ class VendorController {
             const { email } = req.body
             console.log(email,'dfdfdf');
             
-            const result = await this.vendorService.forgotPassword(email.Email)
+            const result = await this._vendorService.forgotPassword(email.Email)
             return res.status(200).json(result)
         } catch (error) {
             console.error(error)
@@ -76,7 +76,7 @@ class VendorController {
 
     async changePasswordVendor(req: Request, res: Response) { 
         try {
-            const result =await this.vendorService.changePasswordVendor(req.body.email, req.body.password)
+            const result =await this._vendorService.changePasswordVendor(req.body.email, req.body.password)
             return res.status(200).json(result)
         } catch (error) {
             console.error(error);
@@ -92,7 +92,7 @@ class VendorController {
                 return res.status(400).json({ success: false, message: 'File not found' })
              }
             
-            const result =await this.vendorService.kycUpload(req.body.email,req.file)
+            const result =await this._vendorService.kycUpload(req.body.email,req.file)
             return res.status(200).json(result)
         } catch (error) {
             console.error(error);
@@ -111,7 +111,7 @@ class VendorController {
                 return res.status(400).json({ success: false, message: 'Token not found' })
             }
             
-            const result = await this.vendorService.getVendorDtails(token)
+            const result = await this._vendorService.getVendorDtails(token)
             return res.status(200).json(result)
         } catch (error) {
             return res.status(500).json({ success: false, message: error })
@@ -138,7 +138,7 @@ class VendorController {
                 return res.status(400).json({ success: false, message: 'Token not found' })
             }
 
-            const result =await this.vendorService.editProfile(token,data,file!)  
+            const result =await this._vendorService.editProfile(token,data,file!)  
             return res.status(200).json(result)
         } catch (error) { 
             console.error(error);
@@ -160,7 +160,7 @@ class VendorController {
             const bearer = req.headers.authorization!;
             const token = bearer.split(" ")[1];
     
-            const result = await this.vendorService.newPassWord(data, token)
+            const result = await this._vendorService.newPassWord(data, token)
             res.status(200).json(result)
           
           
@@ -181,7 +181,7 @@ class VendorController {
                     message:'unautherised:no token provided'
                 })
             }
-            const result =await this.vendorService.refreshToken(refreshToken)
+            const result =await this._vendorService.refreshToken(refreshToken)
             return res.status(200).json(result)
             
         } catch (error:unknown) {
@@ -212,7 +212,7 @@ class VendorController {
     
           
           
-         const result=this.vendorService.resendOtp(email)
+         const result=this._vendorService.resendOtp(email)
           return res.status(200).json(result)
         } catch (error: unknown) {
             console.error("Error in user resend otp controler:", error);
@@ -234,7 +234,7 @@ class VendorController {
            const bearer = req.headers.authorization!
            const token=bearer.split(' ')[1]
            
-           const result = await this.vendorService.getAllHostels(Number(page), searchQuery as string, token)
+           const result = await this._vendorService.getAllHostels(Number(page), searchQuery as string, token)
            return res.status(200).json(result)
 
        } catch (error) {

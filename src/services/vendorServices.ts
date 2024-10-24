@@ -9,6 +9,7 @@ import { generateRefreshToken, generateToken, verifyToken } from "../utils/jwt";
 import User from "../models/userModel";
 import { uploadToS3 } from "../utils/s3Bucket";
 import { HostelRepository } from "../repositories/hostelRepository";
+import { isValidEmail, isValidPassword, isValidPhone } from "../utils/vadidations";
 
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -24,7 +25,7 @@ export class VendorService {
     this._hostelRepository = _hostelRepository;
   }
 
-  async createVendor(user: UserDoc) {
+  async createVendor(user: UserDoc) { 
     const email = user.Email;
     const existingEmail = await this._userRepository.getUserByEmail(email);
     if (existingEmail) {
@@ -36,8 +37,43 @@ export class VendorService {
     }
     console.log("reach the service");
 
+
+
+    if (!user.First_name && user.First_name.length <= 5) {
+      return {
+        success: false,
+        message:'First name must be sharacters and constains 5 letters'
+      }
+    }
+    if (!user.Last_name && user.Last_name.length <= 3) {
+      return {
+        success: false,
+        message:'Last name must be sharacters and constains 5 letters'
+      }
+    }
+    if (isValidPhone(user.Phone)===false) {
+      return {
+        success: false,
+        message:'Password must be valid'
+      }
+    }
+    if (isValidPassword(user.Password)===false) {
+      return {
+        success: false,
+        message:'Password must be valid'
+      }
+    }
+    if (isValidEmail(user.Email) === false) {
+      return {
+           success: false,
+           message:'Password must be valid'
+      }
+    }
+
+
     const salt = bcrypt.genSaltSync(10);
     const Password: string = user.Password;
+
 
     user.Password = bcrypt.hashSync(Password, salt);
 
@@ -200,10 +236,24 @@ export class VendorService {
         };
       }
 
-      console.log("Logging in user:", user);
+     
       const values: string[] = Object.values(user);
-      console.log("Incoming password:", values[1]);
-      console.log("Saved hash:", userExist?.Password);
+      if (isValidEmail(values[0] as string)===false) {
+        return {
+          success: false,
+          message: "enter a valid email",
+          data: null,
+        };
+      }
+      if (isValidPassword(values[1] as string)===false) {
+        return {
+          success: false,
+          message: "enter valid password",
+          data: null,
+        };
+      }
+    
+    
 
       const passwordMatch: boolean = bcrypt.compareSync(
         values[1],
@@ -326,7 +376,14 @@ export class VendorService {
   async changePasswordVendor(email: string, password: {[key:string]:string}) {
     try {
       const salt = bcrypt.genSaltSync(10);
-      console.log(password,'change password vendor');
+
+      if (isValidPassword(password.newPassword)===false) {
+        return {
+          success: false,
+          message:'enter a valid password'
+        }
+      }
+
       
       const hashedPassword = bcrypt.hashSync(password?.newPassword, salt);
 
@@ -497,8 +554,34 @@ export class VendorService {
   async editProfile(token: string, updates: {[key:string]:unknown}, file: Express.Multer.File) {
     try {
       const payload = verifyToken(token);
-
       const id = JSON.parse(JSON.stringify(payload)).payload;
+
+
+
+      if (typeof updates.First_name==="string"  && updates.First_name.length < 5) {
+        return {
+          success: false,
+          message:'First name must be sharacters and constains 5 letters'
+        }
+      }
+      if ( typeof updates.Last_name === "string" && updates.Last_name.length < 3) {
+        return {
+          success: false,
+          message:'Last name must be sharacters and constains 5 letters'
+        }
+      }
+      if (isValidPhone(updates.Phone as number)===false) {
+        return {
+          success: false,
+          message:'Phone Number must be valid'
+        }
+      }
+      if (isValidEmail(updates.Email as string) === false) {
+        return {
+             success: false,
+             message:'Password must be valid'
+        }
+      }
 
       if (file) {
         const bucketName = process.env.AWS_S3_BUCKET_NAME!;
@@ -546,6 +629,13 @@ export class VendorService {
       const payload = verifyToken(token);
 
       const id = JSON.parse(JSON.stringify(payload)).payload;
+
+      if (isValidPassword(newPassword)===false) {
+        return {
+          success: false,
+          message:'enter a valid password'
+        }
+      }
 
       const existingUser:UserDoc|null = await this._userRepository.findById(id._id);
 
@@ -653,7 +743,7 @@ export class VendorService {
       }
     } catch (error) {
       console.log(error);
-      
+      return { success: false, message: 'internal sever error' }
     }
     
   }

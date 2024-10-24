@@ -4,8 +4,8 @@ import { AdminServices } from '../services/adminSevices';
 
 export class AdminController {
 
-    constructor(private adminService: AdminServices) {
-        this.adminService = adminService;
+    constructor(private _adminService: AdminServices) {
+        this._adminService = _adminService;
     }
 
     async loginAdmin(req: Request, res: Response) {
@@ -18,7 +18,7 @@ export class AdminController {
             }
 
             console.log("Attempting admin login with data:", data);
-            const result = await this.adminService.loginUser(data);
+            const result = await this._adminService.loginUser(data);
             
             return res.status(200).json(result);
         } catch (error) {
@@ -37,7 +37,7 @@ export class AdminController {
            
             console.log('get all Users search query',searchQuery);
 
-            const result = await this.adminService.getAllUsers(name,newPage, newLimit);
+            const result = await this._adminService.getAllUsers(name,newPage, newLimit);
 
             return res.status(200).json(result);
         } catch (error) {
@@ -58,7 +58,7 @@ export class AdminController {
             console.log('get all Users search query',searchQuery);
             
            
-            const result = await this.adminService.getAllVendors(name,newPage, newLimit);
+            const result = await this._adminService.getAllVendors(name,newPage, newLimit);
 
             return res.status(200).json(result);
         } catch (error) {
@@ -81,7 +81,7 @@ export class AdminController {
             }
 
             console.log("Blocking user with token:", token);
-            const result = await this.adminService.blockUser(token);
+            const result = await this._adminService.blockUser(token);
 
             return res.status(200).json(result);
         } catch (error) {
@@ -100,7 +100,7 @@ export class AdminController {
             }
 
             console.log("Unblocking user with token:", token);
-            const result = await this.adminService.unBlockUser(token);
+            const result = await this._adminService.unBlockUser(token);
 
             return res.status(200).json(result);
         } catch (error) {
@@ -116,7 +116,7 @@ export class AdminController {
             if (!id) {
                 return res.status(400).json({ success: false, message: 'Id is required' })
             }
-            const result = await this.adminService.verifyVendor(id)
+            const result = await this._adminService.verifyVendor(id)
             return res.status(200).json(result)
         } catch (error) {
             console.error('error from verify vendor admin controller',error)
@@ -132,7 +132,7 @@ export class AdminController {
                     message:'unautherised:no token provided'
                 })
             }
-            const result = this.adminService.refreshToken(refreshToken)
+            const result = this._adminService.refreshToken(refreshToken)
             return res.status(200).json(result)
             
         } catch (error:unknown) {
@@ -149,4 +149,21 @@ export class AdminController {
         }
     }
     
+    async getAllHostel(req: Request, res: Response) {
+        try {
+          const { searchQuery } = req.query;
+          const { page } = req.params;
+          const result = await this._adminService.getAllHostel(
+            Number(page),
+            searchQuery as string
+          );
+          return res.status(200).json(result);
+        } catch (error) {
+          console.error(error);
+          return res.status(500).json({
+            success: false,
+            message: "Internal server Error",
+          });
+        }
+      }
 }

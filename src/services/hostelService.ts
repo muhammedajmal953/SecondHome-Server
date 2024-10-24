@@ -3,8 +3,8 @@ import { verifyToken } from "../utils/jwt";
 import { uploadToS3 } from "../utils/s3Bucket";
 
 export class HostelService {
-  constructor(private hostelRepository: HostelRepository) {
-    this.hostelRepository = hostelRepository;
+  constructor(private _hostelRepository: HostelRepository) {
+    this._hostelRepository = _hostelRepository;
   }
 
   async createHostel(
@@ -17,21 +17,21 @@ export class HostelService {
 
     const id = JSON.parse(JSON.stringify(payload)).payload;
 
-    // for (const file of photos) {
-    //   if (file) {
-    //     const bucketName = process.env.AWS_S3_BUCKET_NAME!;
-    //     const key = `upload/${Date.now()}-${file.originalname}`;
-    //     const fileBuffer = file.buffer;
-    //     const mimetype = file.mimetype;
-    //     const imageUrl = await uploadToS3(
-    //       bucketName,
-    //       key,
-    //       fileBuffer,
-    //       mimetype
-    //     );
-    //     uploadedStrings.push(imageUrl);
-    //   }
-    // }
+    for (const file of photos) {
+      if (file) {
+        const bucketName = process.env.AWS_S3_BUCKET_NAME!;
+        const key = `upload/${Date.now()}-${file.originalname}`;
+        const fileBuffer = file.buffer;
+        const mimetype = file.mimetype;
+        const imageUrl = await uploadToS3(
+          bucketName,
+          key,
+          fileBuffer,
+          mimetype
+        );
+        uploadedStrings.push(imageUrl);
+      }
+    }
     formdata.photos = uploadedStrings;
     formdata.owner = id;
 
@@ -62,7 +62,7 @@ export class HostelService {
       
       
 
-    const result = await this.hostelRepository.create(hostelData);
+    const result = await this._hostelRepository.create(hostelData);
 
     if (result) {
       return {
@@ -85,7 +85,9 @@ export class HostelService {
           { category: { $regex: searchQuery, $options: "i" } },
         ];
       }
-      const hostels = await this.hostelRepository.findAll(filter, skip);
+
+      filter.isActive=true
+      const hostels = await this._hostelRepository.findAll(filter, skip);
       hostels.sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -103,7 +105,7 @@ export class HostelService {
 
   async blockHostel(id: string) {
     try {
-      const blockHostel = await this.hostelRepository.update(id, {
+      const blockHostel = await this._hostelRepository.update(id, {
         isActive: false,
       });
 
@@ -127,7 +129,7 @@ export class HostelService {
   }
   async unBlockHostel(id: string) {
     try {
-      const blockHostel = await this.hostelRepository.update(id, {
+      const blockHostel = await this._hostelRepository.update(id, {
         isActive: true,
       });
 
@@ -151,7 +153,7 @@ export class HostelService {
 
   async getHostel(id: string) {
     try {
-      const hostel = await this.hostelRepository.findById(id);
+      const hostel = await this._hostelRepository.findById(id);
 
       if (!hostel) {
         return {
@@ -171,7 +173,7 @@ export class HostelService {
 
   async getHostelWithOwner(id: string) {
     try {
-      const hostel = await this.hostelRepository.findHostelWIthOwner(id);
+      const hostel = await this._hostelRepository.findHostelWIthOwner(id);
       if (!hostel) {
         return {
           success: false,
@@ -228,7 +230,7 @@ export class HostelService {
         if (typeof hostelData.nearByPlaces === 'string') {
             hostelData.nearbyPlaces=hostelData.nearByPlaces
       }
-       const editedHostel = await this.hostelRepository.update(id, hostelData);
+       const editedHostel = await this._hostelRepository.update(id, hostelData);
 
       if (editedHostel) {
         return {

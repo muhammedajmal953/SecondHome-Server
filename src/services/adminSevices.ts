@@ -1,14 +1,16 @@
 import { UserDoc } from "../interfaces/IUser";
+import { HostelRepository } from "../repositories/hostelRepository";
 import UserRepository from "../repositories/userRepository";
 import { generateRefreshToken, generateToken, verifyToken } from "../utils/jwt";
 import bcrypt from "bcryptjs";
+import { isValidEmail, isValidPassword } from "../utils/vadidations";
 
 
 export class AdminServices{
-    constructor(private userRepository: UserRepository){}
+    constructor(private _userRepository: UserRepository,private _hotelRepository:HostelRepository){}
     async loginUser(admin: Partial<UserDoc>) {
         try { 
-            const adminExist = await this.userRepository.getUserByEmail(admin.Email!);
+            const adminExist = await this._userRepository.getUserByEmail(admin.Email!);
     
             if (!adminExist) {
                 console.error("admin not found");
@@ -21,6 +23,20 @@ export class AdminServices{
     
             //get elements from the object
             const values: string[] = Object.values(admin)
+            if (isValidEmail(values[0] as string)===false) {
+                return {
+                  success: false,
+                  message: "enter a valid email",
+                  data: null,
+                };
+              }
+              if (isValidPassword(values[1] as string)===false) {
+                return {
+                  success: false,
+                  message: "enter valid password",
+                  data: null,
+                };
+              }
             
             const passwordMatch: boolean = bcrypt.compareSync(
                 values[1],
@@ -76,7 +92,7 @@ export class AdminServices{
             ]
         }
        
-        const users = await this.userRepository.findAll(filter, newLimit)
+        const users = await this._userRepository.findAll(filter, newLimit)
         return {
             success: true,
             message: "Users fetched successfully",
@@ -93,7 +109,7 @@ export class AdminServices{
                 {Email:{$regex:name,$options:'i'}},
             ]
         }
-        const users = await this.userRepository.findAll(filter, newLimit)
+        const users = await this._userRepository.findAll(filter, newLimit)
         
         return {
             success: true,
@@ -103,7 +119,7 @@ export class AdminServices{
     }
     
     async blockUser(id: string) {
-        const user = await this.userRepository.findById(id)
+        const user = await this._userRepository.findById(id)
         
         if(!user){
             return {
@@ -122,7 +138,7 @@ export class AdminServices{
         }
     }
     async unBlockUser(id: string) {
-        const user = await this.userRepository.findById(id)
+        const user = await this._userRepository.findById(id)
         
         if(!user){
             return {
@@ -143,7 +159,7 @@ export class AdminServices{
 
     async verifyVendor(_id: string) {
         try {
-            const verification = await this.userRepository.update(_id,{isKYCVerified:true})
+            const verification = await this._userRepository.update(_id,{isKYCVerified:true})
 
             if (!verification) { 
               
@@ -170,7 +186,7 @@ export class AdminServices{
           const payload = verifyToken(token)
           const decoded = JSON.parse(JSON.stringify(payload)).payload
           
-          const userData = await this.userRepository.findById(decoded._id)
+          const userData = await this._userRepository.findById(decoded._id)
           
           if (!userData) return { success: false, message: 'Admin Not found' }
           if (!userData.IsAdmin) throw new Error("Token verification failed")
@@ -183,5 +199,34 @@ export class AdminServices{
           console.error("Error in refreshToken:", error);
           throw error;
         }
-      } 
+    } 
+    
+    async getAllHostel(page: number, searchQuery: string) {
+        try {
+          const skip = (page - 1) * 5;
+    
+          const filter: { [key: string]: unknown } = {};
+    
+          if (searchQuery) {
+            filter["$or"] = [
+              { name: { $regex: searchQuery, $options: "i" } },
+              { category: { $regex: searchQuery, $options: "i" } },
+            ];
+          }
+          const hostels = await this._hotelRepository.findAll(filter, skip);
+          hostels.sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          return {
+            success: true,
+            message: "All hostels are fetched",
+            data: hostels,
+          };
+        } catch (error) {
+          console.log(error);
+          return error;
+        }
+      }
+    
 }

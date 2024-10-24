@@ -8,22 +8,23 @@ import { generateRefreshToken, generateToken, verifyToken } from "../utils/jwt";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/userModel";
 import { uploadToS3 } from "../utils/s3Bucket";
+import { isValidEmail, isValidPassword, isValidPhone } from "../utils/vadidations";
 
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export class UserService {
   constructor(
-    private userRepository: UserRepository,
-    private otpRepository: OtpRepository
+    private _userRepository: UserRepository,
+    private _otpRepository: OtpRepository
   ) {
-    this.userRepository = userRepository;
-    this.otpRepository = otpRepository;
+    this._userRepository = _userRepository;
+    this._otpRepository = _otpRepository;
   }
 
   async createUser(user: UserDoc) {
     const email = user.Email;
-    const existingEmail = await this.userRepository.getUserByEmail(email);
+    const existingEmail = await this._userRepository.getUserByEmail(email);
     if (existingEmail) {
       return {
         success: false,
@@ -31,16 +32,50 @@ export class UserService {
         data: null,
       };
     }
-    console.log("reach the service");
+
+    
+
 
     const salt = bcrypt.genSaltSync(10);
     const Password: string = user.Password;
+
+
+    if (!user.First_name || user.First_name.length <= 5) {
+      return {
+        success: false,
+        message:'First name must be sharacters and constains 5 letters'
+      }
+    }
+    if (!user.Last_name || user.Last_name.length <= 3) {
+      return {
+        success: false,
+        message:'Last name must be sharacters and constains 5 letters'
+      }
+    }
+    if (isValidPhone(user.Phone)===false) {
+      return {
+        success: false,
+        message:'Password must be valid'
+      }
+    }
+    if (isValidPassword(user.Password)===false) {
+      return {
+        success: false,
+        message:'Password must be valid'
+      }
+    }
+    if (isValidEmail(user.Email) === false) {
+      return {
+           success: false,
+           message:'Password must be valid'
+      }
+    }
 
     user.Password = bcrypt.hashSync(Password, salt);
 
     user.Role = "User";
 
-    const newUser = await this.userRepository.create(user);
+    const newUser = await this._userRepository.create(user);
     if (!newUser) {
       return {
         success: false,
@@ -61,7 +96,7 @@ export class UserService {
       isUpdated: false,
     }
 
-    await this.otpRepository.create(newOtpData);
+    await this._otpRepository.create(newOtpData);
 
     return {
       success: true,
@@ -70,7 +105,7 @@ export class UserService {
   }
 
   async verifyUser(otp: string, email: string) {
-    const otpData = await this.otpRepository.getOtpByEmail(email);
+    const otpData = await this._otpRepository.getOtpByEmail(email);
     if (!otpData) {
       console.log("otp not found");
       return {
@@ -97,7 +132,7 @@ export class UserService {
       };
     }
 
-    const user = await this.userRepository.getUserByEmail(email);
+    const user = await this._userRepository.getUserByEmail(email);
 
     if (!user) {
       console.log("user not found");
@@ -114,11 +149,11 @@ export class UserService {
     const token = generateToken(user);
     const refreshToken = generateRefreshToken(user)
     
-    const existingOtp = await this.otpRepository.getOtpByEmail(email)
+    const existingOtp = await this._otpRepository.getOtpByEmail(email)
 
 
 
-    await this.otpRepository.update(existingOtp?._id as string,{Otp:""});
+    await this._otpRepository.update(existingOtp?._id as string,{Otp:""});
     return {
       success: true,
       message: "User verified successfully",
@@ -142,7 +177,7 @@ export class UserService {
       if (payload) {
         const { email, given_name, family_name } = payload;
 
-        const existingEmail = await this.userRepository.getUserByEmail(email!);
+        const existingEmail = await this._userRepository.getUserByEmail(email!);
 
         if (existingEmail && existingEmail.Password) {
           return {
@@ -192,7 +227,7 @@ export class UserService {
 
   async loginUser(user: {[key:string]:unknown}) {
     try {
-      const userExist = await this.userRepository.getUserByEmail(user.Email as string);
+      const userExist = await this._userRepository.getUserByEmail(user.Email as string);
 
       if (!userExist) {
         console.error("User not found");
@@ -204,6 +239,20 @@ export class UserService {
       }
       //get form values in array
       const values: unknown[] = Object.values(user);
+      if (isValidEmail(values[0] as string)===false) {
+        return {
+          success: false,
+          message: "enter a valid email",
+          data: null,
+        };
+      }
+      if (isValidPassword(values[1] as string)===false) {
+        return {
+          success: false,
+          message: "enter valid password",
+          data: null,
+        };
+      }
     
       const passwordMatch: boolean = bcrypt.compareSync(
         values[1] as string,
@@ -240,6 +289,11 @@ export class UserService {
           data: null,
         };
       }
+
+      console.log();
+      
+
+
       const token = generateToken(userExist);
       const refreshToken=generateRefreshToken(userExist)
       return {
@@ -262,7 +316,7 @@ export class UserService {
     try {
       console.log("before user service");
 
-      const user = await this.userRepository.getUserByEmail(email);
+      const user = await this._userRepository.getUserByEmail(email);
       console.log("email at forgot service", email);
 
       if (!user) {
@@ -279,11 +333,11 @@ export class UserService {
         Otp: newOtp,
         ExpiresAt: new Date(Date.now() + 600000) 
       };
-      const existingOtp = await this.otpRepository.getOtpByEmail(email)
+      const existingOtp = await this._otpRepository.getOtpByEmail(email)
 
 
 
-     await this.otpRepository.update(existingOtp?._id as string,otpData);
+     await this._otpRepository.update(existingOtp?._id as string,otpData);
 
       console.log(newOtp, "the forgot password otp");
 
@@ -304,7 +358,7 @@ export class UserService {
 
   async forgotOtpHandle(email: string, otp: string) {
     try {
-      const otpData = await this.otpRepository.getOtpByEmail(email);
+      const otpData = await this._otpRepository.getOtpByEmail(email);
       if (!otpData) {
         console.log("otp not found");
         return {
@@ -330,7 +384,7 @@ export class UserService {
           data: null,
         };
       }
-      await this.otpRepository.update(otpData._id as string,{Otp:''})
+      await this._otpRepository.update(otpData._id as string,{Otp:''})
       return {
         success: true,
         message: "OTP verified",
@@ -343,13 +397,17 @@ export class UserService {
 
   async changePassword(email: string, password:{newPassword:string,confirmPassword:string} ) {
     try {
-
-      
-      
       const salt = bcrypt.genSaltSync(10);
-      const hashedPassword = bcrypt.hashSync(password.newPassword, salt);
 
-      const userExist =await this.userRepository.getUserByEmail(email)
+      if (isValidPassword(password.newPassword)===false) {
+        return {
+          success: false,
+          message:'enter a valid password'
+        }
+      }
+
+      const hashedPassword = bcrypt.hashSync(password.newPassword, salt);
+      const userExist =await this._userRepository.getUserByEmail(email)
       
       if (!userExist) {
         return {
@@ -358,7 +416,7 @@ export class UserService {
         }
       }
      const id:string=userExist?._id as string
-      const user = await this.userRepository.update(id, {
+      const user = await this._userRepository.update(id, {
         Password: hashedPassword,
       });
 
@@ -387,7 +445,7 @@ export class UserService {
 
       const id = JSON.parse(JSON.stringify(payload)).payload;
 
-      const user = await this.userRepository.findById(id._id);
+      const user = await this._userRepository.findById(id._id);
 
       return {
         success: true,
@@ -409,8 +467,34 @@ export class UserService {
       const payload = verifyToken(token);
 
       const id = JSON.parse(JSON.stringify(payload)).payload;
+ 
+              
+    if (typeof updates.First_name==="string"  && updates.First_name.length < 5) {
+      return {
+        success: false,
+        message:'First name must be sharacters and constains 5 letters'
+      }
+    }
+    if ( typeof updates.Last_name === "string" && updates.Last_name.length < 3) {
+      return {
+        success: false,
+        message:'Last name must be sharacters and constains 5 letters'
+      }
+    }
+    if (isValidPhone(updates.Phone as number)===false) {
+      return {
+        success: false,
+        message:'Phone Number must be valid'
+      }
+    }
+    if (isValidEmail(updates.Email as string) === false) {
+      return {
+           success: false,
+           message:'Password must be valid'
+      }
+    }
 
-      console.log("user edit payload", id);
+      
 
       if (file) {
         const bucketName = process.env.AWS_S3_BUCKET_NAME!;
@@ -426,9 +510,7 @@ export class UserService {
         updates = { ...updates, Avatar: imageUrl };
       }
 
-      console.log(updates);
-
-      const result = await this.userRepository.update(id._id, updates);
+      const result = await this._userRepository.update(id._id, updates);
 
       if (!result) {
         return {
@@ -461,17 +543,26 @@ export class UserService {
 
       const id = JSON.parse(JSON.stringify(payload)).payload;
 
-      console.log('_id from change password',payload);
+      console.log(newPassword);
       
 
-      const existingUser = await this.userRepository.findById(id._id);
+      if (isValidPassword(newPassword)===false) {
+        return {
+          success: false,
+          message:'enter a valid password'
+        }
+      }
+
+      const existingUser = await this._userRepository.findById(id._id);
 
       if (!existingUser) {
         return {
             success: false,
             message: "User not found",
         };
-    }
+      }
+      
+
 
       const passwordMatch: boolean = bcrypt.compareSync(
         oldPassword,
@@ -484,12 +575,11 @@ export class UserService {
           message: "wrong old password",
         };
       }
-
         const salt = bcrypt.genSaltSync(10);
 
         const hashedPassword = bcrypt.hashSync(newPassword, salt);
 
-        const result=await this.userRepository.update(id,{Password:hashedPassword})
+        const result=await this._userRepository.update(id,{Password:hashedPassword})
       
       return {
         success:true,
@@ -511,7 +601,7 @@ export class UserService {
       const payload = verifyToken(token)
       const decoded = JSON.parse(JSON.stringify(payload)).payload
       
-      const userData = await this.userRepository.findById(decoded._id)
+      const userData = await this._userRepository.findById(decoded._id)
       
       if (!userData) return { success: false, message: 'User Not found' }
       if (!userData.IsActive) throw new Error("Token verification failed")
@@ -528,7 +618,7 @@ export class UserService {
 
   async resendOtp(email: string) {
     try {
-      const registeredUser = await this.userRepository.getUserByEmail(email)
+      const registeredUser = await this._userRepository.getUserByEmail(email)
       
       if (!registeredUser) {
         return {success:false,message:'No user Found'}
@@ -543,11 +633,11 @@ export class UserService {
         Otp: otp,
         ExpiresAt: new Date(Date.now() + 600000) // Expires in 10 minutes
       };
-      const existingOtp = await this.otpRepository.getOtpByEmail(email)
+      const existingOtp = await this._otpRepository.getOtpByEmail(email)
 
 
 
-      await this.otpRepository.update(existingOtp?._id as string,otpData);  
+      await this._otpRepository.update(existingOtp?._id as string,otpData);  
       return {
         success: true,
         message:'otp resend successfully'

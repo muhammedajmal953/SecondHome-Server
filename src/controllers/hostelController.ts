@@ -2,10 +2,10 @@ import { Request, Response } from "express";
 import { HostelService } from "../services/hostelService";
 
 export class HostelController {
-  private hostelService: HostelService;
+   
 
-  constructor(hostelService: HostelService) {
-    this.hostelService = hostelService;
+  constructor( private _hostelService: HostelService) {
+    this._hostelService = _hostelService;
   }
 
   async createHostel(req: Request, res: Response) {
@@ -22,7 +22,7 @@ export class HostelController {
         });
       }
 
-      const result = await this.hostelService.createHostel(
+      const result = await this._hostelService.createHostel(
         photos,
         formdata,
         token
@@ -50,7 +50,7 @@ export class HostelController {
     try {
       const { searchQuery } = req.query;
       const { page } = req.params;
-      const result = await this.hostelService.getAllHostel(
+      const result = await this._hostelService.getAllHostel(
         Number(page),
         searchQuery as string
       );
@@ -73,7 +73,7 @@ export class HostelController {
         });
       }
 
-      const result = await this.hostelService.blockHostel(id);
+      const result = await this._hostelService.blockHostel(id);
 
       return res.status(200).json(result);
     } catch (error: unknown) {
@@ -94,7 +94,7 @@ export class HostelController {
         });
       }
 
-      const result = await this.hostelService.unBlockHostel(id);
+      const result = await this._hostelService.unBlockHostel(id);
 
       return res.status(200).json(result);
     } catch (error: unknown) {
@@ -110,7 +110,7 @@ export class HostelController {
   async getHostel(req: Request, res: Response) {
     try {
       const { id } = req.params
-      const result = await this.hostelService.getHostel(id)
+      const result = await this._hostelService.getHostel(id)
       return res.status(200).json(result)
     } catch (error) {
       console.error('Error from the Hostelcontroller.GetHostel',error);
@@ -120,7 +120,7 @@ export class HostelController {
   async getHostelWithOwner(req: Request, res: Response) {
     try {
       const { id } = req.params
-      const result = await this.hostelService.getHostelWithOwner(id)
+      const result = await this._hostelService.getHostelWithOwner(id)
       return res.status(200).json(result)
     } catch (error) {
       console.error('Error from the Hostelcontroller.GetHostel',error);
@@ -142,7 +142,7 @@ export class HostelController {
         });
      }
 
-      const result = await this.hostelService.editHostle(id, photos, formdata)
+      const result = await this._hostelService.editHostle(id, photos, formdata)
       
       return res.status(200).json(result)
    } catch (error) {

@@ -9,11 +9,11 @@ import { HostelController } from "../controllers/hostelController";
 import { Admin_Routes } from "../constants/routes-constants";
 
 const adminRouter = Router();
-
-const userRepository = new UserRepository();
-const adminService = new AdminServices(userRepository);
-const adminController = new AdminController(adminService);
 const hostelRepository = new HostelRepository();
+const userRepository = new UserRepository();
+
+const adminService = new AdminServices(userRepository,hostelRepository);
+const adminController = new AdminController(adminService);
 const hostelService = new HostelService(hostelRepository);
 const hostelController = new HostelController(hostelService);
 
@@ -51,7 +51,7 @@ adminRouter.put(
 adminRouter.get(
   Admin_Routes.GET_ALL_HOSTELS,
   adminAuth,
-  hostelController.getAllHostel.bind(hostelController)
+  adminController.getAllHostel.bind(adminController)
 );
 
 adminRouter.get(Admin_Routes.REFRESH_TOKEN, adminController.refreshToken.bind(adminController));

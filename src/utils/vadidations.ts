@@ -78,4 +78,22 @@ export const validateHostel = [
       });
     }
     next();
-  };
+};
+  
+export const isValidPassword=(password: string)=>{
+  const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]{8,}$/;
+
+  return passwordRegex.test(password)
+}
+export const isValidEmail=(email: string)=>{
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email)
+}
+export const isValidPhone = (phone: number) => {
+  const newNumber:string=phone.toString()
+  const phoneRegex = /^[5-9][0-9]{9}$/;
+
+  return phoneRegex.test(newNumber)
+}
+
+

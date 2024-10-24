@@ -4,13 +4,13 @@ import UserRepository from "../repositories/userRepository";
 
 const userRepository = new UserRepository();
 class UserController {
-  constructor(private userService: UserService) {
-    this.userService = userService;
+  constructor(private _userService: UserService) {
+    this._userService = _userService;
   }
 
   async createUser(req: Request, res: Response) {
     const newUser = req.body;
-    const result = await this.userService.createUser(newUser);
+    const result = await this._userService.createUser(newUser);
 
     if (!result.success) {
       return res.status(400).json(result);
@@ -24,17 +24,17 @@ class UserController {
     const registeredUser = await userRepository.getUserByEmail(email);
 
     if (registeredUser && registeredUser.isVerified === true) {
-      const result = await this.userService.forgotOtpHandle(email, otp);
+      const result = await this._userService.forgotOtpHandle(email, otp);
       return res.status(200).json(result);
     }
-    const result = await this.userService.verifyUser(otp, email);
+    const result = await this._userService.verifyUser(otp, email);
     return res.status(200).json(result);
   }
 
   async singleSignIn(req: Request, res: Response) {
     try {
       const { PROVIDER_ID } = req.body;
-      const result = await this.userService.singleSignIn(PROVIDER_ID);
+      const result = await this._userService.singleSignIn(PROVIDER_ID);
       return res.status(200).json(result);
     } catch (error) {
       console.error(error);
@@ -42,9 +42,8 @@ class UserController {
   }
   async loginUser(req: Request, res: Response) {
     try {
-      console.log("logged in body", req.body);
       const user = req.body;
-      const result = await this.userService.loginUser(user);
+      const result = await this._userService.loginUser(user);
       if (!result?.success) {
         return res.status(400).json(result);
       }
@@ -65,7 +64,7 @@ class UserController {
 
       console.log("email forgot", email);
 
-      const result = await this.userService.forgotPassword(email.Email);
+      const result = await this._userService.forgotPassword(email.Email);
       return res.status(200).json(result);
     } catch (error) {
       console.error(error);
@@ -75,7 +74,7 @@ class UserController {
 
   async changePassword(req: Request, res: Response) {
     try {
-      const result = await this.userService.changePassword(
+      const result = await this._userService.changePassword(
         req.body.email,
         req.body.password
       );
@@ -92,7 +91,7 @@ class UserController {
 
       token = token.split(" ")[1];
 
-      const result = await this.userService.getUser(token);
+      const result = await this._userService.getUser(token);
       return res.status(200).json(result);
     } catch (error) {
       console.log(error);
@@ -121,7 +120,7 @@ class UserController {
           .json({ success: false, message: "Token not found" });
       }
 
-      const result = await this.userService.editProfile(token, data, file!);
+      const result = await this._userService.editProfile(token, data, file!);
       return res.status(200).json(result);
     } catch (error) {
       console.error(error);
@@ -140,10 +139,13 @@ class UserController {
           data: null,
         });
       }
+
+      console.log('sefd');
+      
       const bearer = req.headers.authorization!;
       const token = bearer.split(" ")[1];
 
-      const result = await this.userService.newPassWord(data, token);
+      const result = await this._userService.newPassWord(data, token);
       res.status(200).json(result);
     } catch (error) {
       console.log(error);
@@ -164,7 +166,7 @@ class UserController {
       }
       console.log(refreshToken);
       
-      const result =await this.userService.refreshToken(refreshToken);
+      const result =await this._userService.refreshToken(refreshToken);
       return res.status(200).json(result);
     } catch (error: unknown) {
       console.error("Error in VendorController.refreshToken:", error);
@@ -192,7 +194,7 @@ class UserController {
           .json({ success: false, message: "UnAutherised Approach" });
       }
 
-      const result = this.userService.resendOtp(email);
+      const result = this._userService.resendOtp(email);
       return res.status(200).json(result);
     } catch (error: unknown) {
       console.error("Error in user resend otp controler:", error);
