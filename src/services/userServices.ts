@@ -8,12 +8,17 @@ import { generateRefreshToken, generateToken, verifyToken } from "../utils/jwt";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/userModel";
 import { uploadToS3 } from "../utils/s3Bucket";
-import { isValidEmail, isValidPassword, isValidPhone } from "../utils/vadidations";
-
+import {
+  isValidEmail,
+  isValidPassword,
+  isValidPhone,
+} from "../utils/vadidations";
+import { Role } from "../utils/enums";
+import { IUserSrvice } from "../interfaces/IServices";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-export class UserService {
+export class UserService implements IUserSrvice{
   constructor(
     private _userRepository: UserRepository,
     private _otpRepository: OtpRepository
@@ -33,47 +38,43 @@ export class UserService {
       };
     }
 
-    
-
-
     const salt = bcrypt.genSaltSync(10);
     const Password: string = user.Password;
-
 
     if (!user.First_name || user.First_name.length <= 5) {
       return {
         success: false,
-        message:'First name must be sharacters and constains 5 letters'
-      }
+        message: "First name must be sharacters and constains 5 letters",
+      };
     }
     if (!user.Last_name || user.Last_name.length <= 3) {
       return {
         success: false,
-        message:'Last name must be sharacters and constains 5 letters'
-      }
+        message: "Last name must be sharacters and constains 5 letters",
+      };
     }
-    if (isValidPhone(user.Phone)===false) {
+    if (isValidPhone(user.Phone) === false) {
       return {
         success: false,
-        message:'Password must be valid'
-      }
+        message: "Password must be valid",
+      };
     }
-    if (isValidPassword(user.Password)===false) {
+    if (isValidPassword(user.Password) === false) {
       return {
         success: false,
-        message:'Password must be valid'
-      }
+        message: "Password must be valid",
+      };
     }
     if (isValidEmail(user.Email) === false) {
       return {
-           success: false,
-           message:'Password must be valid'
-      }
+        success: false,
+        message: "Password must be valid",
+      };
     }
 
     user.Password = bcrypt.hashSync(Password, salt);
 
-    user.Role = "User";
+    user.Role = Role.User;
 
     const newUser = await this._userRepository.create(user);
     if (!newUser) {
@@ -94,7 +95,7 @@ export class UserService {
       CreatedAt: new Date(),
       ExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
       isUpdated: false,
-    }
+    };
 
     await this._otpRepository.create(newOtpData);
 
@@ -105,63 +106,69 @@ export class UserService {
   }
 
   async verifyUser(otp: string, email: string) {
-    const otpData = await this._otpRepository.getOtpByEmail(email);
-    if (!otpData) {
-      console.log("otp not found");
-      return {
-        success: false,
-        message: "Something went wrong",
-        data: null,
-      };
-    }
-    if (otpData.Otp !== otp) {
-      console.log("invalid otp");
-      return {
-        success: false,
-        message: "Invalid OTP",
-        data: null,
-      };
-    }
-    if (otpData.ExpiresAt < new Date()) {
-      console.log("otp expired");
-
-      return {
-        success: false,
-        message: "OTP expired",
-        data: null,
-      };
-    }
-
-    const user = await this._userRepository.getUserByEmail(email);
-
-    if (!user) {
-      console.log("user not found");
-
-      return {
-        success: false,
-        message: "Something went wrong",
-        data: null,
-      };
-    }
-    user.isVerified = true;
-    user.save();
-
-    const token = generateToken(user);
-    const refreshToken = generateRefreshToken(user)
-    
-    const existingOtp = await this._otpRepository.getOtpByEmail(email)
-
-
-
-    await this._otpRepository.update(existingOtp?._id as string,{Otp:""});
-    return {
-      success: true,
-      message: "User verified successfully",
-      data: {
-        token,
-        refreshToken
+    try {
+      const otpData = await this._otpRepository.getOtpByEmail(email);
+      if (!otpData) {
+        console.log("otp not found");
+        return {
+          success: false,
+          message: "invalid Otp",
+          data: null,
+        };
       }
-    };
+      if (otpData.Otp !== otp) {
+        console.log("invalid otp");
+        return {
+          success: false,
+          message: "Invalid OTP",
+          data: null,
+        };
+      }
+      if (otpData.ExpiresAt < new Date()) {
+        console.log("otp expired");
+
+        return {
+          success: false,
+          message: "OTP expired",
+          data: null,
+        };
+      }
+
+      const user = await this._userRepository.getUserByEmail(email);
+
+      if (!user) {
+        console.log("user not found");
+
+        return {
+          success: false,
+          message: "Something went wrong",
+          data: null,
+        };
+      }
+      user.isVerified = true;
+      user.save();
+
+      const token = generateToken(user);
+      const refreshToken = generateRefreshToken(user);
+
+      const existingOtp = await this._otpRepository.getOtpByEmail(email);
+
+      await this._otpRepository.update(existingOtp?._id as string, { Otp: "" });
+      return {
+        success: true,
+        message: "User verified successfully",
+        data: {
+          token,
+          refreshToken,
+        },
+      };
+    } catch (error) {
+      console.error("UserVerify otp", error);
+      return {
+        success: false,
+        message:'Failed to verify User Otp'
+      }
+    }
   }
 
   async singleSignIn(idToken: string) {
@@ -187,14 +194,14 @@ export class UserService {
           };
         } else if (existingEmail) {
           const token = generateToken(existingEmail);
-          const refreshToken=generateRefreshToken(existingEmail)
+          const refreshToken = generateRefreshToken(existingEmail);
 
           return {
             success: true,
             message: "Login Successful",
             data: {
               token,
-              refreshToken
+              refreshToken,
             },
           };
         }
@@ -204,30 +211,40 @@ export class UserService {
           First_name: given_name,
           Last_name: family_name,
           isVerified: true,
-          Role: "User",
+          Role: Role.User,
         });
 
         await newUser.save();
-        const token = generateToken(newUser)
-        const refreshToken=generateRefreshToken(newUser)
+        const token = generateToken(newUser);
+        const refreshToken = generateRefreshToken(newUser);
 
         return {
           success: true,
           message: "User Logged in succefully",
           data: {
             token,
-            refreshToken
+            refreshToken,
           },
         };
       }
+      return {
+        success: false,
+        message:"User Login Failed"
+      }
     } catch (error) {
       console.log(error);
+      return {
+        success: false,
+        message:'Failed to User Login'
+      }
     }
   }
 
-  async loginUser(user: {[key:string]:unknown}) {
+  async loginUser(user: { [key: string]: unknown }) {
     try {
-      const userExist = await this._userRepository.getUserByEmail(user.Email as string);
+      const userExist = await this._userRepository.getUserByEmail(
+        user.Email as string
+      );
 
       if (!userExist) {
         console.error("User not found");
@@ -239,21 +256,21 @@ export class UserService {
       }
       //get form values in array
       const values: unknown[] = Object.values(user);
-      if (isValidEmail(values[0] as string)===false) {
+      if (isValidEmail(values[0] as string) === false) {
         return {
           success: false,
           message: "enter a valid email",
           data: null,
         };
       }
-      if (isValidPassword(values[1] as string)===false) {
+      if (isValidPassword(values[1] as string) === false) {
         return {
           success: false,
           message: "enter valid password",
           data: null,
         };
       }
-    
+
       const passwordMatch: boolean = bcrypt.compareSync(
         values[1] as string,
         userExist?.Password
@@ -282,7 +299,7 @@ export class UserService {
           data: null,
         };
       }
-      if (userExist.Role !== "User") {
+      if (userExist.Role !== Role.User) {
         return {
           success: false,
           message: "Only user can login",
@@ -290,17 +307,14 @@ export class UserService {
         };
       }
 
-      console.log();
-      
-
-
       const token = generateToken(userExist);
-      const refreshToken=generateRefreshToken(userExist)
+      const refreshToken = generateRefreshToken(userExist);
       return {
         success: true,
         message: "Login Successful",
         data: {
-          token,refreshToken
+          token,
+          refreshToken,
         },
       };
     } catch (error) {
@@ -331,13 +345,11 @@ export class UserService {
       sendMail("secondHome", "Forgot Password", user.Email, newOtp);
       const otpData = {
         Otp: newOtp,
-        ExpiresAt: new Date(Date.now() + 600000) 
+        ExpiresAt: new Date(Date.now() + 600000),
       };
-      const existingOtp = await this._otpRepository.getOtpByEmail(email)
+      const existingOtp = await this._otpRepository.getOtpByEmail(email);
 
-
-
-     await this._otpRepository.update(existingOtp?._id as string,otpData);
+      await this._otpRepository.update(existingOtp?._id as string, otpData);
 
       console.log(newOtp, "the forgot password otp");
 
@@ -384,7 +396,7 @@ export class UserService {
           data: null,
         };
       }
-      await this._otpRepository.update(otpData._id as string,{Otp:''})
+      await this._otpRepository.update(otpData._id as string, { Otp: "" });
       return {
         success: true,
         message: "OTP verified",
@@ -392,30 +404,37 @@ export class UserService {
       };
     } catch (error) {
       console.log(error);
+      return {
+        success: false,
+        message:'Failed to User Login'
+      }
     }
   }
 
-  async changePassword(email: string, password:{newPassword:string,confirmPassword:string} ) {
+  async changePassword(
+    email: string,
+    password: { newPassword: string; confirmPassword: string }
+  ) {
     try {
       const salt = bcrypt.genSaltSync(10);
 
-      if (isValidPassword(password.newPassword)===false) {
+      if (isValidPassword(password.newPassword) === false) {
         return {
           success: false,
-          message:'enter a valid password'
-        }
+          message: "enter a valid password",
+        };
       }
 
       const hashedPassword = bcrypt.hashSync(password.newPassword, salt);
-      const userExist =await this._userRepository.getUserByEmail(email)
-      
+      const userExist = await this._userRepository.getUserByEmail(email);
+
       if (!userExist) {
         return {
           success: false,
-          message:'No User Found'
-        }
+          message: "No User Found",
+        };
       }
-     const id:string=userExist?._id as string
+      const id: string = userExist?._id as string;
       const user = await this._userRepository.update(id, {
         Password: hashedPassword,
       });
@@ -434,9 +453,12 @@ export class UserService {
       };
     } catch (error) {
       console.log(error);
+      return {
+        success: false,
+        message:'Failed to User Login'
+      }
     }
   }
-
 
   async getUser(token: string) {
     try {
@@ -462,39 +484,46 @@ export class UserService {
     }
   }
 
-  async editProfile(token: string, updates: {[key:string]:unknown}, file: Express.Multer.File) {
+  async editProfile(
+    token: string,
+    updates: { [key: string]: unknown },
+    file: Express.Multer.File
+  ) {
     try {
       const payload = verifyToken(token);
 
       const id = JSON.parse(JSON.stringify(payload)).payload;
- 
-              
-    if (typeof updates.First_name==="string"  && updates.First_name.length < 5) {
-      return {
-        success: false,
-        message:'First name must be sharacters and constains 5 letters'
-      }
-    }
-    if ( typeof updates.Last_name === "string" && updates.Last_name.length < 3) {
-      return {
-        success: false,
-        message:'Last name must be sharacters and constains 5 letters'
-      }
-    }
-    if (isValidPhone(updates.Phone as number)===false) {
-      return {
-        success: false,
-        message:'Phone Number must be valid'
-      }
-    }
-    if (isValidEmail(updates.Email as string) === false) {
-      return {
-           success: false,
-           message:'Password must be valid'
-      }
-    }
 
-      
+      if (
+        typeof updates.First_name === "string" &&
+        updates.First_name.length < 5
+      ) {
+        return {
+          success: false,
+          message: "First name must be sharacters and constains 5 letters",
+        };
+      }
+      if (
+        typeof updates.Last_name === "string" &&
+        updates.Last_name.length < 3
+      ) {
+        return {
+          success: false,
+          message: "Last name must be sharacters and constains 5 letters",
+        };
+      }
+      if (isValidPhone(updates.Phone as number) === false) {
+        return {
+          success: false,
+          message: "Phone Number must be valid",
+        };
+      }
+      if (isValidEmail(updates.Email as string) === false) {
+        return {
+          success: false,
+          message: "Password must be valid",
+        };
+      }
 
       if (file) {
         const bucketName = process.env.AWS_S3_BUCKET_NAME!;
@@ -530,13 +559,13 @@ export class UserService {
 
       return {
         success: false,
-        message: error,
+        message: error as string,
         data: null,
       };
     }
   }
 
-  async newPassWord(data: {[key:string]:string}, token: string) {
+  async newPassWord(data: { [key: string]: string }, token: string) {
     try {
       const { oldPassword, newPassword } = data;
       const payload = verifyToken(token);
@@ -544,25 +573,22 @@ export class UserService {
       const id = JSON.parse(JSON.stringify(payload)).payload;
 
       console.log(newPassword);
-      
 
-      if (isValidPassword(newPassword)===false) {
+      if (isValidPassword(newPassword) === false) {
         return {
           success: false,
-          message:'enter a valid password'
-        }
+          message: "enter a valid password",
+        };
       }
 
       const existingUser = await this._userRepository.findById(id._id);
 
       if (!existingUser) {
         return {
-            success: false,
-            message: "User not found",
+          success: false,
+          message: "User not found",
         };
       }
-      
-
 
       const passwordMatch: boolean = bcrypt.compareSync(
         oldPassword,
@@ -575,41 +601,46 @@ export class UserService {
           message: "wrong old password",
         };
       }
-        const salt = bcrypt.genSaltSync(10);
+      const salt = bcrypt.genSaltSync(10);
 
-        const hashedPassword = bcrypt.hashSync(newPassword, salt);
+      const hashedPassword = bcrypt.hashSync(newPassword, salt);
 
-        const result=await this._userRepository.update(id,{Password:hashedPassword})
-      
+      const result = await this._userRepository.update(id, {
+        Password: hashedPassword,
+      });
+
       return {
-        success:true,
-        message: 'password changed',
-        data:result
-      }
+        success: true,
+        message: "password changed",
+        data: result,
+      };
     } catch (error) {
       console.log(error);
       return {
-        seccess: false,
-        message: 'error in change password',
-      
-      }
+        success: false,
+        message: "error in change password",
+      };
     }
   }
 
-  async refreshToken(token:string) {
+  async refreshToken(token: string) {
     try {
-      const payload = verifyToken(token)
-      const decoded = JSON.parse(JSON.stringify(payload)).payload
-      
-      const userData = await this._userRepository.findById(decoded._id)
-      
-      if (!userData) return { success: false, message: 'User Not found' }
-      if (!userData.IsActive) throw new Error("Token verification failed")
-      
-      const accessToken =generateToken(userData)
-      const refreshToken = generateRefreshToken(userData)
-      
-      return{ success:true,message:'Token refreshed successfully',data:{accessToken,refreshToken}}
+      const payload = verifyToken(token);
+      const decoded = JSON.parse(JSON.stringify(payload)).payload;
+
+      const userData = await this._userRepository.findById(decoded._id);
+
+      if (!userData) return { success: false, message: "User Not found" };
+      if (!userData.IsActive) throw new Error("Token verification failed");
+
+      const accessToken = generateToken(userData);
+      const refreshToken = generateRefreshToken(userData);
+
+      return {
+        success: true,
+        message: "Token refreshed successfully",
+        data: { accessToken, refreshToken },
+      };
     } catch (error) {
       console.error("Error in refreshToken:", error);
       throw error;
@@ -618,35 +649,34 @@ export class UserService {
 
   async resendOtp(email: string) {
     try {
-      const registeredUser = await this._userRepository.getUserByEmail(email)
-      
+      const registeredUser = await this._userRepository.getUserByEmail(email);
+
       if (!registeredUser) {
-        return {success:false,message:'No user Found'}
+        return { success: false, message: "No user Found" };
       }
 
-      const otp = generateOtp()
+      const otp = generateOtp();
       sendMail("secondHome", "Resended Otp", email, otp);
-      console.log('resend otp', otp);
+      console.log("resend otp", otp);
       console.log(email);
-      
+
       const otpData = {
         Otp: otp,
-        ExpiresAt: new Date(Date.now() + 600000) // Expires in 10 minutes
+        ExpiresAt: new Date(Date.now() + 600000), // Expires in 10 minutes
       };
-      const existingOtp = await this._otpRepository.getOtpByEmail(email)
+      const existingOtp = await this._otpRepository.getOtpByEmail(email);
 
-
-
-      await this._otpRepository.update(existingOtp?._id as string,otpData);  
+      await this._otpRepository.update(existingOtp?._id as string, otpData);
       return {
         success: true,
-        message:'otp resend successfully'
-     } 
+        message: "otp resend successfully",
+      };
     } catch (error) {
-      console.error('Error from Userservice.resendOtp',error);
-      
+      console.error("Error from Userservice.resendOtp", error);
+      return {
+        success: false,
+        message:'Failed to Resend Otp'
+      }
     }
   }
-
- 
 }

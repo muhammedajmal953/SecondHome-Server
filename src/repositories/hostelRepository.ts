@@ -2,8 +2,9 @@ import mongoose from "mongoose";
 import { IHostel } from "../interfaces/IHostel";
 import Hostel from "../models/hostelModel";
 import { BaseRepository } from "./baseRepository";
+import { IHostelRepository } from "../interfaces/IRepositories";
 
-export class HostelRepository extends BaseRepository<IHostel> {
+export class HostelRepository extends BaseRepository<IHostel> implements IHostelRepository {
   constructor() {
     super(Hostel);
   }

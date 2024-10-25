@@ -4,10 +4,14 @@ import UserRepository from "../repositories/userRepository";
 import { generateRefreshToken, generateToken, verifyToken } from "../utils/jwt";
 import bcrypt from "bcryptjs";
 import { isValidEmail, isValidPassword } from "../utils/vadidations";
+import { Role } from "../utils/enums";
+import { IAdminService } from "../interfaces/IServices";
 
 
-export class AdminServices{
-    constructor(private _userRepository: UserRepository,private _hotelRepository:HostelRepository){}
+export class AdminServices implements IAdminService{
+    constructor(private _userRepository: UserRepository, private _hotelRepository: HostelRepository) { }
+    
+
     async loginUser(admin: Partial<UserDoc>) {
         try { 
             const adminExist = await this._userRepository.getUserByEmail(admin.Email!);
@@ -54,7 +58,7 @@ export class AdminServices{
     
          
           
-            if (adminExist.Role !== 'Admin'||!adminExist.IsAdmin) { 
+            if (adminExist.Role !== Role.Admin||!adminExist.IsAdmin) { 
                 return {
                     success: false,
                     message: "Unauthorized access",
@@ -84,7 +88,7 @@ export class AdminServices{
     async getAllUsers(name:string,page: number, limit: number) {
       
         const newLimit = limit * (page - 1)
-        const filter:{[key:string]:unknown}={ Role: 'User' }
+        const filter:{[key:string]:unknown}={ Role: Role.User }
         if (name) {
             filter['$or'] = [
                 { First_name: { $regex: name, $options: 'i' } },
@@ -102,7 +106,7 @@ export class AdminServices{
     async getAllVendors(name:string,page: number, limit: number) {
       
         const newLimit = limit * (page - 1)
-        const filter:{[key:string]:unknown}={ Role: 'Vendor' }
+        const filter:{[key:string]:unknown}={ Role: Role.Vendor }
         if (name) {
             filter['$or'] = [
                 { First_name: { $regex: name, $options: 'i' } },
@@ -176,7 +180,11 @@ export class AdminServices{
                 data: verification,
             }
         } catch (error) {
-            console.error('Error from adminService.verifyVendor',error)
+            console.error('Error from adminService.verifyVendor', error)
+            return {
+                success: false,
+                message: 'failed to verify vendor'
+            }
         }
 
     }
@@ -225,7 +233,10 @@ export class AdminServices{
           };
         } catch (error) {
           console.log(error);
-          return error;
+            return {
+                success: false,
+                message:'Failed To fetch hostel'
+          }
         }
       }
     

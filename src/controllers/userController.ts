@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/userServices";
 import UserRepository from "../repositories/userRepository";
+import { Status } from "../utils/enums";
 
 const userRepository = new UserRepository();
 class UserController {
@@ -9,50 +10,111 @@ class UserController {
   }
 
   async createUser(req: Request, res: Response) {
-    const newUser = req.body;
-    const result = await this._userService.createUser(newUser);
+    try {
+      const newUser = req.body;
+      const result = await this._userService.createUser(newUser);
 
-    if (!result.success) {
-      return res.status(400).json(result);
+      if (!result.success) {
+        return res.status(Status.CONFLICT).json(result);
+      }
+
+      return res.status(Status.CREATED).json(result);
+    } catch (error) {
+      
+      console.error("Error creating user:", error);
+      return res.status(Status.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Internal Server Error",
+      });
     }
-
-    return res.status(200).json(result);
   }
 
   async verifyUser(req: Request, res: Response) {
-    const { otp, email } = req.body;
-    const registeredUser = await userRepository.getUserByEmail(email);
+   try {
+     const { otp, email } = req.body;
+     
+     if(!otp||email) return res.status(Status.BAD_REQUEST).json({message:'Email and OTP required'})
+
+     const registeredUser = await userRepository.getUserByEmail(email);
+     
+    
 
     if (registeredUser && registeredUser.isVerified === true) {
       const result = await this._userService.forgotOtpHandle(email, otp);
-      return res.status(200).json(result);
+
+      if (result?.success) {
+        return res.status(Status.OK).json(result);
+      }
+    
+      if (result?.message === 'invalid Otp' || result?.message === 'OTP expired') {
+        return res.status(Status.NOT_FOUND).json(result)
+      }
+
+      return res.status(Status.BAD_REQUEST).json({
+        success: false,
+        message: result?.message || "Verification failed",
+      });
+
+     }
+     
+     const result = await this._userService.verifyUser(otp, email);
+     
+     
+     if (result?.success) {
+      return res.status(Status.OK).json(result);
     }
-    const result = await this._userService.verifyUser(otp, email);
-    return res.status(200).json(result);
+  
+    if (result?.message === 'invalid Otp' || result?.message === 'OTP expired') {
+      return res.status(Status.NOT_FOUND).json(result)
+    }
+
+    return res.status(Status.BAD_REQUEST).json({
+      success: false,
+      message: result?.message || "Verification failed",
+    });
+
+   } catch (error) {
+    console.error("Error creating user:", error);
+    return res.status(Status.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+   }
   }
 
   async singleSignIn(req: Request, res: Response) {
     try {
       const { PROVIDER_ID } = req.body;
       const result = await this._userService.singleSignIn(PROVIDER_ID);
-      return res.status(200).json(result);
+
+      if (!result?.success) {
+        console.error(result?.message)
+        return res.status(Status.BAD_REQUEST).json(result)
+      }
+
+      return res.status(Status.OK).json(result);
     } catch (error) {
-      console.error(error);
+      console.error("Error creating user:", error);
+      return res.status(Status.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Internal Server Error",
+      });
     }
   }
+
   async loginUser(req: Request, res: Response) {
     try {
       const user = req.body;
       const result = await this._userService.loginUser(user);
       if (!result?.success) {
-        return res.status(400).json(result);
+        return res.status(Status.BAD_REQUEST).json(result);
       }
-      return res.status(200).json(result);
+      return res.status(Status.OK).json(result);
     } catch (error) {
       console.log(error);
-      return res.status(400).json({
+      return res.status(Status.INTERNAL_SERVER_ERROR).json({
         success: false,
-        message: error,
+        message: 'Internal Server error',
         data: null,
       });
     }
@@ -65,10 +127,10 @@ class UserController {
       console.log("email forgot", email);
 
       const result = await this._userService.forgotPassword(email.Email);
-      return res.status(200).json(result);
+      return res.status(Status.OK).json(result);
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ success: false, message: error });
+      return res.status(Status.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Internal server error' });
     }
   }
 
@@ -78,10 +140,10 @@ class UserController {
         req.body.email,
         req.body.password
       );
-      return res.status(200).json(result);
+      return res.status(Status.OK).json(result);
     } catch (error) {
       console.log(error);
-      return res.status(500).json({ success: false, message: error });
+      return res.status(Status.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Internal server error' });
     }
   }
 
@@ -92,9 +154,10 @@ class UserController {
       token = token.split(" ")[1];
 
       const result = await this._userService.getUser(token);
-      return res.status(200).json(result);
+      return res.status(Status.OK).json(result);
     } catch (error) {
       console.log(error);
+      return res.status(Status.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Internal server error' });
     }
   }
 
@@ -116,15 +179,15 @@ class UserController {
         console.log("token not found");
 
         return res
-          .status(400)
+          .status(Status.UN_AUTHORISED)
           .json({ success: false, message: "Token not found" });
       }
 
       const result = await this._userService.editProfile(token, data, file!);
-      return res.status(200).json(result);
+      return res.status(Status.OK).json(result);
     } catch (error) {
       console.error(error);
-      return res.status(500).json({ success: false, message: error });
+      return res.status(Status.INTERNAL_SERVER_ERROR).json({ success: false, message: error });
     }
   }
 
@@ -133,7 +196,7 @@ class UserController {
       const data = req.body;
 
       if (!data) {
-        return res.status(400).json({
+        return res.status(Status.BAD_REQUEST).json({
           success: false,
           message: "no data found",
           data: null,
@@ -145,11 +208,20 @@ class UserController {
       const bearer = req.headers.authorization!;
       const token = bearer.split(" ")[1];
 
+      if (!token) {
+        return res
+          .status(Status.UN_AUTHORISED)
+          .json({
+            success: false,
+            message:'Unauthorised: access denined '
+        })
+      }
+
       const result = await this._userService.newPassWord(data, token);
-      res.status(200).json(result);
+      res.status(Status.OK).json(result);
     } catch (error) {
       console.log(error);
-      res.json(500).json({
+      res.json(Status.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: "Internal Server Error",
       });
@@ -160,14 +232,14 @@ class UserController {
     try {
       const { refreshToken } = req.params;
       if (!refreshToken) {
-        return res.status(401).json({
+        return res.status(Status.UN_AUTHORISED).json({
           message: "unautherised:no token provided",
         });
       }
       console.log(refreshToken);
       
       const result =await this._userService.refreshToken(refreshToken);
-      return res.status(200).json(result);
+      return res.status(Status.OK).json(result);
     } catch (error: unknown) {
       console.error("Error in VendorController.refreshToken:", error);
       if (error instanceof Error) {
@@ -175,11 +247,11 @@ class UserController {
           error.message === "Token expired" ||
           error.name === "Token verification failed"
         ) {
-          res.status(401).json({ message: "Unauthorized: Token expired" });
+          res.status(Status.UN_AUTHORISED).json({ message: "Unauthorized: Token expired" });
           return;
         }
       }
-      res.status(500).json({ error: "Internal server error" });
+      res.status(Status.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
     }
   }
 
@@ -190,23 +262,23 @@ class UserController {
 
       if (!email) {
         return res
-          .status(401)
+          .status(Status.UN_AUTHORISED)
           .json({ success: false, message: "UnAutherised Approach" });
       }
 
       const result = this._userService.resendOtp(email);
-      return res.status(200).json(result);
+      return res.status(Status.OK).json(result);
     } catch (error: unknown) {
       console.error("Error in user resend otp controler:", error);
       if (error instanceof Error) {
         if (error.message === "NO User Found") {
-          res.status(401).json({ message: "Unauthorized: Email not valid" });
+          res.status(Status.UN_AUTHORISED).json({ message: "Unauthorized: Email not valid" });
           return;
         }
       }
 
       return res
-        .status(500)
+        .status(Status.INTERNAL_SERVER_ERROR)
         .json({ success: false, message: "Internal Server Error" });
     }
   }

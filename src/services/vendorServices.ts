@@ -10,11 +10,13 @@ import User from "../models/userModel";
 import { uploadToS3 } from "../utils/s3Bucket";
 import { HostelRepository } from "../repositories/hostelRepository";
 import { isValidEmail, isValidPassword, isValidPhone } from "../utils/vadidations";
+import { Role } from "../utils/enums";
+import { IVendorService } from "../interfaces/IServices";
 
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-export class VendorService {
+export class VendorService implements IVendorService{
   constructor(
     private _userRepository: UserRepository,
     private _otpRepository: OtpRepository,
@@ -77,7 +79,7 @@ export class VendorService {
 
     user.Password = bcrypt.hashSync(Password, salt);
 
-    user.Role = "Vendor";
+    user.Role = Role.Vendor;
 
     const newUser = await this._userRepository.create(user);
     if (!newUser) {
@@ -200,7 +202,7 @@ export class VendorService {
           First_name: given_name,
           Last_name: family_name,
           isVerified: true,
-          Role: "Vendor",
+          Role: Role.Vendor,
         });
 
         await newUser.save();
@@ -212,6 +214,11 @@ export class VendorService {
           message: "User Logged in succefully",
           data: {token,refreshToken},
         };
+      }
+
+      return {
+        success: false,
+        message:"User Logged in failed"
       }
     } catch (error) {
       console.log(error);
@@ -299,7 +306,7 @@ export class VendorService {
           data: null,
         };
       }
-      if (userExist.Role !== "Vendor") {
+      if (userExist.Role !== Role.Vendor) {
         return {
           success: false,
           message: "Only vendor can login",
@@ -339,7 +346,7 @@ export class VendorService {
         };
       }
 
-      if (user.Role !== "Vendor") {
+      if (user.Role !== Role.Vendor) {
         return {
           success: false,
           message: "Please Enter a Vendor Email",
@@ -415,6 +422,10 @@ export class VendorService {
       };
     } catch (error) {
       console.log(error);
+      return {
+        success: false,
+        message:'Passs word changing failed'
+      }
     }
   }
 
@@ -556,8 +567,6 @@ export class VendorService {
       const payload = verifyToken(token);
       const id = JSON.parse(JSON.stringify(payload)).payload;
 
-
-
       if (typeof updates.First_name==="string"  && updates.First_name.length < 5) {
         return {
           success: false,
@@ -617,7 +626,7 @@ export class VendorService {
 
       return {
         success: false,
-        message: error,
+        message: error as string,
         data: null,
       };
     }
@@ -665,7 +674,7 @@ export class VendorService {
     } catch (error) {
       console.log(error);
       return {
-        seccess: false,
+        success: false,
         message: "error in change password",
       };
     }
@@ -714,7 +723,11 @@ export class VendorService {
         message:'otp resend successfully'
      } 
     } catch (error) {
-      console.error('Error from Userservice.resendOtp',error);  
+      console.error('Error from Userservice.resendOtp', error);  
+      return {
+        success: false,
+        message:'resend otp failed'
+      }
     }
   }
 

@@ -1,7 +1,8 @@
 import { Model,Document } from "mongoose";
+import { IBaseRepository } from "../interfaces/IRepositories";
 
 
-export class BaseRepository <T extends Document>{
+export class BaseRepository <T extends Document> implements IBaseRepository<T>{
     constructor(private _model: Model<T>) {
        this._model=_model
     }

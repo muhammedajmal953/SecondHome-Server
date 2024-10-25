@@ -1,9 +1,10 @@
 import otpModel from "../models/otpModel";
 import { OtpDoc } from "../interfaces/IOtp";
 import { BaseRepository } from "./baseRepository";
+import { IOtpRepository } from "../interfaces/IRepositories";
 
 
-class OtpRepository extends BaseRepository<OtpDoc>{ 
+class OtpRepository extends BaseRepository<OtpDoc> implements IOtpRepository{ 
     constructor() {
         super(otpModel)
     }
