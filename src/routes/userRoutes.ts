@@ -53,4 +53,5 @@ userRouter.post(USER_ROUTES.RESEND_OTP, userController.resendOtp.bind(userContro
 userRouter.get(USER_ROUTES.GET_HOSTEL,userAuth,hostelController.getHostelWithOwner.bind(hostelController))
 
 
+
 export default userRouter    

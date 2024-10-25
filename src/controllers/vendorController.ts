@@ -17,7 +17,7 @@ class VendorController {
         }
            
         return res.status(200).json(result)
-        
+            
     }
 
     async verifyVendor(req: Request, res: Response) {

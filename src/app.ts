@@ -15,7 +15,7 @@ const app: Express = express();
 
 dotenv.config();
 connectDB();
-
+job.start()
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -40,7 +40,6 @@ app.use('/',userRouter)
 app.use('/vendor', venderRouter)
 app.use('/admin',adminRouter) 
 
-job.start()
 
 app.listen(process.env.PORT, () => {
     console.log(`Server is running on port ${process.env.PORT}`)
