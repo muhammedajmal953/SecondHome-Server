@@ -38,7 +38,7 @@ app.use(morgan('combined', { stream: appLogStream }))
    
 app.use('/',userRouter)
 app.use('/vendor', venderRouter)
-app.use('/admin',adminRouter) 
+app.use('/admin',adminRouter)  
 
 
 app.listen(process.env.PORT, () => {

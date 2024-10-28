@@ -15,5 +15,4 @@ const OTP = new Schema<OtpDoc>({
     }
 })
 
-
 export default mongoose.model<OtpDoc>('Otp', OTP)

@@ -9,6 +9,8 @@ export interface IHostel extends Document {
     district: string;
     state: string;
     pincode: number;
+    longtitude: string;
+    latitude: string;
   };
   phone: string;
   email: string;
@@ -17,7 +19,7 @@ export interface IHostel extends Document {
   policies: string;
   nearbyPlaces: string[];
   photos: string[];
-  rates: { type: string; price: number }[];
+  rates: { type: string; price: number,quantity:number }[];
   foodRate: number;
   createdAt: Date;
   updatedAt: Date;
@@ -54,6 +56,6 @@ export interface IHostelService {
         formdata: { [key: string]: unknown }
     ): Promise<IResponse>;
 
-
+    
     
 }

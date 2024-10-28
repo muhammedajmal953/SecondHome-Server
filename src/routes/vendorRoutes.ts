@@ -1,4 +1,4 @@
-import { NextFunction, Router,Request,Response } from 'express';
+import {Router} from 'express';
 import VendorController from '../controllers/vendorController';
 import { VendorService } from '../services/vendorServices';
 import OtpRepository from '../repositories/otpRepository';
@@ -9,7 +9,6 @@ import { HostelService } from '../services/hostelService';
 import { HostelController } from '../controllers/hostelController';
 import { vendorAuth } from '../middlewares/vendorAuthMiddleWare';
 import { VENDER_ROUTES } from '../constants/routes-constants';
-import { handleValidationErrors, validateHostel } from '../utils/vadidations';
 
 const venderRouter = Router();
 const otpRepository = new OtpRepository();
@@ -52,10 +51,6 @@ venderRouter.get(VENDER_ROUTES.GET_HOSTELS, vendorAuth, vendorController.getmyHo
 
 venderRouter.get(VENDER_ROUTES.GET_HOSTEL, vendorAuth, hostelController.getHostel.bind(hostelController))
 
-venderRouter.put(VENDER_ROUTES.EDIT_HOSTEL,upload.array('photos', 5),  (req:Request, res:Response, next:NextFunction) => {
-    console.log('Body:', req.body); // Log the body to ensure multer is working correctly
-    console.log('Files:', req.files); // Log the files to ensure multer is handling file uploads
-    next();
-  },vendorAuth,validateHostel,handleValidationErrors,hostelController.editHostel.bind(hostelController))
+venderRouter.put(VENDER_ROUTES.EDIT_HOSTEL,upload.array('photos', 5),vendorAuth,hostelController.editHostel.bind(hostelController))
  
 export default venderRouter;

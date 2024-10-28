@@ -1,6 +1,8 @@
 import { IHostel } from "./IHostel"
 import { OtpDoc } from "./IOtp"
 import { UserDoc } from "./IUser"
+import { IWishlist } from "./IWishlist"
+
 
 
 export interface IBaseRepository<T>{
@@ -23,3 +25,9 @@ export interface IOtpRepository extends IBaseRepository<OtpDoc>{
 export interface IUserRepository extends IBaseRepository<UserDoc>{
     getUserByEmail(email: string): Promise<UserDoc | null>
 }
+
+
+export interface IWishlistRepository extends IBaseRepository<IWishlist>{
+    getWishlistByUserId(id: string): Promise<IWishlist | null>
+}
+

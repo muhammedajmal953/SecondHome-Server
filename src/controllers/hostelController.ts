@@ -190,25 +190,36 @@ export class HostelController {
 
   async editHostel(req: Request, res: Response) {
     try {
+      console.log('enter user');
+      
       const { id } = req.params
       
-
+      console.log(id);
+      
       const photos = req.files as Express.Multer.File[];
       const formdata = req.body;
-
+      console.log(formdata);
+      
       if (!formdata) {
         return res.status(Status.NOT_FOUND).json({
           success: false,
           message: "no data found",
         });
-     }
+      }
+      
+      console.log('recieved');
+      
 
       const result = await this._hostelService.editHostle(id, photos, formdata)
+
+      if (!result || !result.success) {
+        return res.status(Status.BAD_GATEWAY).json(result)
+      }
       
       return res.status(Status.OK).json(result)
    } catch (error) {
     console.error('Error from the hostel.Controller.editHostel',error);
-    
+    return res.status(Status.INTERNAL_SERVER_ERROR).json({message:'internal server error'})
    }
  }
 }

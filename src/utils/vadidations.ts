@@ -1,7 +1,10 @@
 import { Response,Request,NextFunction } from 'express';
 import { body, validationResult } from 'express-validator'
 
-
+interface Rate {
+  quantity: number; // Ensure quantity is a number
+  price: number;    // Ensure price is a number
+}
 
 export const validateHostel = [
     body('name')
@@ -59,12 +62,17 @@ export const validateHostel = [
     body('rates')
       .isObject()
       .withMessage('Rates must be an object')
-      .custom((value) => {
-        for (const rate in value) {
-          if (!Number.isInteger(value[rate]) || value[rate] <= 0) {
-            throw new Error(`Invalid rate for ${rate}`);
-          }
-        }
+        .custom((value) => {
+          value.forEach((rate:Rate) => {
+            // Check for quantity property
+            if (!rate.quantity || !Number.isInteger(rate.quantity) || rate.quantity <= 0) {
+              throw new Error('Each rate must have a valid quantity property (positive integer)');
+            }
+            // Check for price property
+            if (!rate.price || typeof rate.price !== 'number' || rate.price <= 0) {
+              throw new Error('Each rate must have a valid price property (positive number)');
+            }
+          });
         return true;
       })
 ];

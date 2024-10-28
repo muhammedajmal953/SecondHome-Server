@@ -9,14 +9,24 @@ import { HostelService } from "../services/hostelService";
 import { HostelController } from "../controllers/hostelController";
 import { userAuth } from "../middlewares/userAuthMiddleWare";
 import { USER_ROUTES } from "../constants/routes-constants";
+import { WishlistRepository } from "../repositories/wishlistRepository";
+import { WishlistServices } from "../services/wishlistServises";
+import { WishlistController } from "../controllers/wishlistController";
 
 const userRepository = new UserRepository();
 const otpRepository = new OtpRepository();
+const wishlistRepository = new WishlistRepository();
+const hostelRepository = new HostelRepository()
+
 const userService = new UserService(userRepository, otpRepository);
 const userController = new UserController(userService);
-const hostelRepository=new HostelRepository()
+
 const hostelService = new HostelService(hostelRepository)
-const hostelController=new HostelController(hostelService)
+const hostelController = new HostelController(hostelService)
+
+//wish list service and controller
+const wishlistServices = new WishlistServices(wishlistRepository, hostelRepository)
+const wishlistController=new WishlistController(wishlistServices)
 
 
 
@@ -50,7 +60,12 @@ userRouter.get(USER_ROUTES.TOKEN,userController.refreshToken.bind(userController
 
 userRouter.post(USER_ROUTES.RESEND_OTP, userController.resendOtp.bind(userController))
 
-userRouter.get(USER_ROUTES.GET_HOSTEL,userAuth,hostelController.getHostelWithOwner.bind(hostelController))
+userRouter.get(USER_ROUTES.GET_HOSTEL, userAuth, hostelController.getHostelWithOwner.bind(hostelController))
+
+//wishlistRoutes
+userRouter.post(USER_ROUTES.ADD_TO_WISHLIST,userAuth,wishlistController.addToWishlist.bind(wishlistController))
+userRouter.get(USER_ROUTES.GET_ALL_WISHLIST,userAuth,wishlistController.getAllWishlist.bind(wishlistController))
+userRouter.put(USER_ROUTES.REMOVE_FROM_WISHLIST,userAuth,wishlistController.removeWishlist.bind(wishlistController))
 
 
 

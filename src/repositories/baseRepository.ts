@@ -1,4 +1,4 @@
-import { Model,Document } from "mongoose";
+import { Model,Document, UpdateQuery } from "mongoose";
 import { IBaseRepository } from "../interfaces/IRepositories";
 
 
@@ -34,7 +34,7 @@ export class BaseRepository <T extends Document> implements IBaseRepository<T>{
         }
     }
     
-    async update(id: string, item: Partial<T>): Promise<T | null> {
+    async update(id: string, item: UpdateQuery<T>): Promise<T | null> {
         try {
             return await this._model.findByIdAndUpdate(id, item, { new: true });
         } catch (error) {

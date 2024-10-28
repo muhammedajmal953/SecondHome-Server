@@ -20,4 +20,4 @@ class UserRepository extends BaseRepository<UserDoc> implements IUserRepository{
     
 }
 
-export default UserRepository
+export default UserRepository 

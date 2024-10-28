@@ -55,3 +55,12 @@ export interface IVendorService{
     resendOtp(email: string): Promise<IResponse>;
     getAllHostels(page: number, searchQuery: string, token: string): Promise<IResponse>;
 }
+
+export interface IWishlistService{
+  addToWish(id: string,hostelId:string): Promise<IResponse>;
+  getAllWishList(page: number, searchQuery: string, id: string): Promise<IResponse>;
+  removeFromWishList(id:string,userId:string):Promise<IResponse>
+}
+
+
+

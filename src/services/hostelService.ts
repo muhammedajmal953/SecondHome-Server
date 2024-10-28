@@ -40,9 +40,10 @@ export class HostelService implements IHostelService {
     const { rates, ...hostelData } = formdata;
 
     hostelData.rates = JSON.parse(rates as string).map(
-      (rate: { type: string; price: number }) => ({
+      (rate: { type: string; price: number,quantity:number }) => ({
         type: rate.type,
         price: rate.price,
+        quantity:rate.quantity
       })
     );
 
@@ -213,9 +214,7 @@ export class HostelService implements IHostelService {
   ): Promise<IResponse> {
     try {
       const uploadedStrings: string[] = formdata.existingPhotos as string[];
-      console.log("photos from front", photos);
-
-      if (photos) {
+      if (photos) {  
         for (const file of photos) {
           if (file) {
             const bucketName = process.env.AWS_S3_BUCKET_NAME!;
@@ -237,22 +236,28 @@ export class HostelService implements IHostelService {
       const { rates, ...hostelData } = formdata;
 
       if (rates && typeof rates === "object") {
-        hostelData.rates = Object.entries(rates).map(([type, price]) => ({
+        hostelData.rates = Object.entries(rates).map(([type, details]) => ({
           type,
-          price,
+          price: details.price,
+          quantity:details.quantity
         }));
       }
 
       if (typeof hostelData.nearByPlaces === "string") {
         hostelData.nearbyPlaces = hostelData.nearByPlaces;
       }
+
+      console.log('hostel datas');
+      
       const editedHostel = await this._hostelRepository.update(id, hostelData);
+      console.log('edited  hostel');
+      
 
       if (!editedHostel) {
         return {
           success: false,
           message: "Failed to Edit Hostel",
-        };
+        }; 
       }
       return {
         success: true,

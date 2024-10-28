@@ -2,9 +2,6 @@ import mongoose from "mongoose";
 import { IHostel } from "../interfaces/IHostel";
 import { ObjectId } from "mongodb";
 
-
-
-
 const HostelModel = new mongoose.Schema<IHostel>({
     name: String,
     address: {
@@ -12,7 +9,9 @@ const HostelModel = new mongoose.Schema<IHostel>({
         city: String,
         district: String,
         state: String,
-        pincode: Number
+        pincode: Number,
+        latitude: String,
+        longtitude:String
     },
     phone: String,
     email: String,
@@ -20,16 +19,17 @@ const HostelModel = new mongoose.Schema<IHostel>({
     facilities: [String],
     policies: String,
     nearbyPlaces: [String],
-    photos: [String],
+    photos: [String], 
     rates: [
         {
             type: { type: String, required: true },
-            price: { type: Number, required: true }
+            price: { type: Number, required: true },
+            quantity:{type:Number,required:true}
         }
     ],
     foodRate: Number,
     createdAt: {
-        type: Date,
+        type: Date, 
         default:new Date
     },
     updatedAt: {
@@ -48,4 +48,3 @@ const HostelModel = new mongoose.Schema<IHostel>({
 
 const Hostel= mongoose.model<IHostel>("Hostel", HostelModel)
 export default Hostel
-

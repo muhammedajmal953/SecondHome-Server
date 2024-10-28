@@ -11,40 +11,40 @@ export const Admin_Routes = {
   UNBLOCK_HOSTEL: "/unBlockHostel",
 };
 
-
-
 export const USER_ROUTES = {
-    SIGN_UP: '/sign-up',
-    VERIFY_OTP: '/verify-otp',
-    LOGIN: '/login',
-    GOOGLE_LOGIN: '/google-login',
-    FORGOT_PASSWORD: '/forgot-password',
-    CHANGE_PASSWORD: '/change-password',
-    GET_USER: '/getUser',
-    EDIT_PROFILE: '/edit-profile',
-    GET_ALL_HOSTEL: '/getAllHostel/:page',
-    CHANGE_PASSWORD_NEW: '/changePassword',
-    TOKEN: '/token',
-    RESEND_OTP: '/resend-otp',
-    GET_HOSTEL: '/getHostel/:id'
-  };
-  
-  export const VENDER_ROUTES = {
-    SIGN_UP: '/sign-up',
-    VERIFY_OTP: '/verify-otp',
-    LOGIN: '/login',
-    GOOGLE_LOGIN: '/google-login',
-    FORGOT_PASSWORD: '/forgot-password',
-    CHANGE_PASSWORD: '/change-password',
-    KYC_UPLOAD: '/kycUpload',
-    VENDOR_DETAILS: '/vendorDetails',
-    EDIT_PROFILE: '/edit-profile',
-    ADD_HOSTEL: '/addHostel',
-    CHANGE_PASSWORD_NEW: '/changePassword',
-    TOKEN: '/token',
-    RESEND_OTP: '/resend-otp',
-    GET_HOSTELS: '/getAllHostels/:page',
-    GET_HOSTEL: '/getHostel/:id',
-    EDIT_HOSTEL:'/editHostel/:id'
-  };
-  
+  SIGN_UP: "/sign-up",
+  VERIFY_OTP: "/verify-otp",
+  LOGIN: "/login",
+  GOOGLE_LOGIN: "/google-login",
+  FORGOT_PASSWORD: "/forgot-password",
+  CHANGE_PASSWORD: "/change-password",
+  GET_USER: "/getUser",
+  EDIT_PROFILE: "/edit-profile",
+  GET_ALL_HOSTEL: "/getAllHostel/:page",
+  CHANGE_PASSWORD_NEW: "/changePassword",
+  TOKEN: "/token",
+  RESEND_OTP: "/resend-otp",
+  GET_HOSTEL: "/getHostel/:id",
+  ADD_TO_WISHLIST: '/add-to-wishlist',
+  REMOVE_FROM_WISHLIST: '/remove-wishlist',
+  GET_ALL_WISHLIST:'/get-wishlist/:page'
+}; 
+
+export const VENDER_ROUTES = {
+  SIGN_UP: "/sign-up",
+  VERIFY_OTP: "/verify-otp",
+  LOGIN: "/login",
+  GOOGLE_LOGIN: "/google-login",
+  FORGOT_PASSWORD: "/forgot-password",
+  CHANGE_PASSWORD: "/change-password",
+  KYC_UPLOAD: "/kycUpload",
+  VENDOR_DETAILS: "/vendorDetails",
+  EDIT_PROFILE: "/edit-profile",
+  ADD_HOSTEL: "/addHostel",
+  CHANGE_PASSWORD_NEW: "/changePassword",
+  TOKEN: "/token",
+  RESEND_OTP: "/resend-otp",
+  GET_HOSTELS: "/getAllHostels/:page",
+  GET_HOSTEL: "/getHostel/:id",
+  EDIT_HOSTEL: "/editHostel/:id",
+};
