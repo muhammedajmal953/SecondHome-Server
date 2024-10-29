@@ -27,7 +27,9 @@ export const USER_ROUTES = {
   GET_HOSTEL: "/getHostel/:id",
   ADD_TO_WISHLIST: '/add-to-wishlist',
   REMOVE_FROM_WISHLIST: '/remove-wishlist',
-  GET_ALL_WISHLIST:'/get-wishlist/:page'
+  GET_ALL_WISHLIST: '/get-wishlist/:page',
+  CONFIRM_ORDER: '/confirm-order',
+  SAVE_BOOKING:'/save-booking',
 }; 
 
 export const VENDER_ROUTES = {

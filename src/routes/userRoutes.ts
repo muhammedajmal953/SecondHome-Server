@@ -12,11 +12,15 @@ import { USER_ROUTES } from "../constants/routes-constants";
 import { WishlistRepository } from "../repositories/wishlistRepository";
 import { WishlistServices } from "../services/wishlistServises";
 import { WishlistController } from "../controllers/wishlistController";
+import { BookingRepository } from "../repositories/bookingRepository";
+import { BookingService } from "../services/bookingServices";
+import { BookingController } from "../controllers/bookingController";
 
 const userRepository = new UserRepository();
 const otpRepository = new OtpRepository();
 const wishlistRepository = new WishlistRepository();
 const hostelRepository = new HostelRepository()
+const bookingRepository=new BookingRepository()
 
 const userService = new UserService(userRepository, otpRepository);
 const userController = new UserController(userService);
@@ -28,12 +32,13 @@ const hostelController = new HostelController(hostelService)
 const wishlistServices = new WishlistServices(wishlistRepository, hostelRepository)
 const wishlistController=new WishlistController(wishlistServices)
 
+//booking service and controller
 
-
+const bookingServices = new BookingService(bookingRepository, hostelRepository)
+const bookingController=new BookingController(bookingServices)
 
 
 const userRouter = Router();
-
 
 
 userRouter.post(USER_ROUTES.SIGN_UP, userController.createUser.bind(userController))
@@ -65,7 +70,11 @@ userRouter.get(USER_ROUTES.GET_HOSTEL, userAuth, hostelController.getHostelWithO
 //wishlistRoutes
 userRouter.post(USER_ROUTES.ADD_TO_WISHLIST,userAuth,wishlistController.addToWishlist.bind(wishlistController))
 userRouter.get(USER_ROUTES.GET_ALL_WISHLIST,userAuth,wishlistController.getAllWishlist.bind(wishlistController))
-userRouter.put(USER_ROUTES.REMOVE_FROM_WISHLIST,userAuth,wishlistController.removeWishlist.bind(wishlistController))
+userRouter.put(USER_ROUTES.REMOVE_FROM_WISHLIST, userAuth, wishlistController.removeWishlist.bind(wishlistController))
+
+//save order
+userRouter.post(USER_ROUTES.CONFIRM_ORDER,userAuth,bookingController.createOrder.bind(bookingController))
+userRouter.post(USER_ROUTES.SAVE_BOOKING,userAuth,bookingController.saveBooking.bind(bookingController))
 
 
 

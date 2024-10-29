@@ -1,3 +1,4 @@
+import { IOrder } from "./IOrders";
 import { IResponse } from "./IResponse";
 import { UserDoc } from "./IUser";
 
@@ -63,4 +64,14 @@ export interface IWishlistService{
 }
 
 
+export interface IRazorpayResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
 
+export interface IBookingService{
+  createOrder(orderData: Record<string, unknown>): Promise<IResponse>
+  
+  saveBooking(orderData:IOrder):Promise<IResponse>
+}

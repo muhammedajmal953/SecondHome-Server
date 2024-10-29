@@ -201,7 +201,7 @@ export class HostelService implements IHostelService {
     } catch (error) {
       console.error("Error from Hostel Service.get Hostel with owner", error);
       return {
-        success: false,
+        success: false, 
         message: error as string,
       };
     }
