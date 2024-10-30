@@ -34,4 +34,15 @@ export class HostelRepository extends BaseRepository<IHostel> implements IHostel
       throw new Error("Could not fetch record by ID");
     }
   }
+
+
+  
+  async updateHostel(filter: Record<string,unknown>, item: Record<string,unknown>): Promise<boolean|null>{
+    try {
+        return Hostel.findOneAndUpdate(filter,item)
+    } catch (error) {
+        console.log(error);
+        return null
+    }
+}
 }

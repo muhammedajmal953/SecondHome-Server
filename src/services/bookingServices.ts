@@ -4,13 +4,14 @@ import { IResponse } from "../interfaces/IResponse";
 import { IBookingService } from "../interfaces/IServices";
 import { BookingRepository } from "../repositories/bookingRepository";
 import { HostelRepository } from "../repositories/hostelRepository";
-import { log } from "util";
+import { verifyToken } from "../utils/jwt";
+
 
 export class BookingService implements IBookingService {
   constructor(
     private _bookingRepository: BookingRepository,
     private _hostelRepository: HostelRepository
-  ) {}
+  ) { }
 
   async createOrder(orderData: Record<string, unknown>): Promise<IResponse> {
     try {
@@ -38,42 +39,141 @@ export class BookingService implements IBookingService {
       });
         
         
-        const instance = new Razorpay({
-            key_id: process.env.RazorPay_id!,
-            key_secret: process.env.RazorPay_secret
-        }) 
+      const instance = new Razorpay({
+        key_id: process.env.RazorPay_id!,
+        key_secret: process.env.RazorPay_secret
+      })
       
-      console.log('secret razor pay',process.env.RazorPay_secret);
-      
-
-        const options = {
-          amount: orderData.amount as number,
-          currency: orderData.currency as string,
-          receipt: orderData.receipt as string
-        }
+      const options = {
+        amount: orderData.amount as number,
+        currency: orderData.currency as string,
+        receipt: orderData.receipt as string
+      }
 
         
       const order = await instance.orders.create(options)
-      console.log(order);
+      if (!order) {
+        return {
+          success: false,
+          message: 'Unauthorised Razor pay'
+        }
+      }
       
       return {
         success: true,
         message: "message",
-        data:order
-      };  
-    } catch (error:any) {
+        data: order
+      };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
       console.error('Razorpay Error:', {
         statusCode: error.statusCode,
         error: error.error,
         stack: error.stack
-    });
+      });
       return {
         success: false,
-        message: "message",
+        message: "Razor pay failed",
       };
     }
   }
   async saveBooking(orderData: IOrder): Promise<IResponse> {
-    throw new Error("Method not implemented.");
+    try {
+      
+      if (!orderData) {
+        return {
+          success: false,
+          message: 'booking data must be added'
+        }
+      }
+
+      const hostelItem = {
+        _id: orderData.hostelId,
+        "rates.type": orderData.bedType,
+        "rates.quantity": { $gt: 0 }
+      }
+
+      const updation = { $inc: { "rates.$.quantity": -1 } }
+
+      const updateHostel = await this._hostelRepository.updateHostel(hostelItem, updation)
+
+      if (!updateHostel) {
+        return {
+          success: false,
+          message: 'faliled save booking'
+        }
+      }
+      
+      const savebooking = await this._bookingRepository.create(orderData)
+      
+      return {
+        success: true,
+        message: 'Save booking successfull',
+        data: savebooking
+      }
+      
+    } catch (error) {
+      console.log(error);
+      return {
+        success: false,
+        message: 'save booking failed'
+      }
+    }
+  }
+
+
+  async getAllBookings(page: number, token:string) {
+    try {
+      const skip: number = (Math.abs(page - 1)) * 5
+
+
+      const payload = verifyToken(token);
+
+      const id = JSON.parse(JSON.stringify(payload)).payload;
+
+    
+      
+
+      const bookings = await this._bookingRepository.getAllBookingsWithHostels({ userId:id._id }, skip)
+
+      console.log('id from the get all bookings',bookings);
+      
+      return {
+        success: true,
+        message: 'Bookings Available',
+        data:bookings
+      }
+
+    } catch (error) {
+      console.log(error)
+      return {
+        success: false,
+        message:'Faled to fetch bookings'
+      }
+    }
+  
+  }
+
+  async cancelBooking(reason:string,id:string){
+    try {
+      const filter = {
+        cancelReason: reason,
+        isCancelled:true
+      }
+
+      const cancelling = await this._bookingRepository.update(id, filter)
+      
+      if (cancelling) {
+        return {
+          success: true,
+          message:'cancelling offer Pending'
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      
+    }
   }
 }
+
+

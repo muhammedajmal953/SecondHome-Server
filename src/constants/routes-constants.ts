@@ -29,7 +29,9 @@ export const USER_ROUTES = {
   REMOVE_FROM_WISHLIST: '/remove-wishlist',
   GET_ALL_WISHLIST: '/get-wishlist/:page',
   CONFIRM_ORDER: '/confirm-order',
-  SAVE_BOOKING:'/save-booking',
+  SAVE_BOOKING: '/save-booking',
+  GET_BOOKINGS: '/get-bookings/:page',
+  CANCEL_BOOKING:'/cancel-booking',
 }; 
 
 export const VENDER_ROUTES = {
@@ -49,4 +51,6 @@ export const VENDER_ROUTES = {
   GET_HOSTELS: "/getAllHostels/:page",
   GET_HOSTEL: "/getHostel/:id",
   EDIT_HOSTEL: "/editHostel/:id",
+  SHOW_BOOKINGS: '/get-bookings',
+  CONFIRM_CANCEL: '/confirm-cancel',
 };

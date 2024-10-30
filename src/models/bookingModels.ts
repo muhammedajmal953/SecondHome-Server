@@ -8,14 +8,24 @@ const bookingModel = new Schema<IOrder>({
     hostelId: ObjectId,
     userId: ObjectId,
     bedType: String,
+    checkInDate: Date,
+    isActive: {
+        type: Boolean,
+        default:true
+    },
+    isCancelled: {
+        type: Boolean,
+        default:false
+    },
     bookedAt: {
         type: Date,
         default:new Date()
     },
-    foodRatePerQuest: Number,
-    numberOfQuests: Number,
+    foodRatePerGuest: Number,
+    numberOfGuests: Number,
     totalAmount: Number,
-    advancePerQuest: Number,
+    advancePerGuest: Number,
+    cancelReason:String,
     paymentDetails: {
         razorpay_payment_id: String,
         razprpay_order_id: String,

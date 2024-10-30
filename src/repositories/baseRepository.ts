@@ -34,7 +34,8 @@ export class BaseRepository <T extends Document> implements IBaseRepository<T>{
         }
     }
     
-    async update(id: string, item: UpdateQuery<T>): Promise<T | null> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async update(id: any, item: UpdateQuery<T>): Promise<T | null> {
         try {
             return await this._model.findByIdAndUpdate(id, item, { new: true });
         } catch (error) {

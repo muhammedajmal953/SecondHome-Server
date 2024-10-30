@@ -72,10 +72,12 @@ userRouter.post(USER_ROUTES.ADD_TO_WISHLIST,userAuth,wishlistController.addToWis
 userRouter.get(USER_ROUTES.GET_ALL_WISHLIST,userAuth,wishlistController.getAllWishlist.bind(wishlistController))
 userRouter.put(USER_ROUTES.REMOVE_FROM_WISHLIST, userAuth, wishlistController.removeWishlist.bind(wishlistController))
 
-//save order
+//save and cancel bookings
 userRouter.post(USER_ROUTES.CONFIRM_ORDER,userAuth,bookingController.createOrder.bind(bookingController))
-userRouter.post(USER_ROUTES.SAVE_BOOKING,userAuth,bookingController.saveBooking.bind(bookingController))
+userRouter.post(USER_ROUTES.SAVE_BOOKING, userAuth, bookingController.saveBooking.bind(bookingController))
+userRouter.get(USER_ROUTES.GET_BOOKINGS, userAuth, bookingController.getAllbokings.bind(bookingController))
+userRouter.put(USER_ROUTES.CANCEL_BOOKING, userAuth, bookingController.cancelBooking.bind(bookingController))
 
-
+ 
 
 export default userRouter    
