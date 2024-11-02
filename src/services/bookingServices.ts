@@ -13,6 +13,7 @@ export class BookingService implements IBookingService {
     private _hostelRepository: HostelRepository
   ) { }
 
+  
   async createOrder(orderData: Record<string, unknown>): Promise<IResponse> {
     try {
       const hostel = await this._hostelRepository.findById(
@@ -86,14 +87,16 @@ export class BookingService implements IBookingService {
           message: 'booking data must be added'
         }
       }
-
+        console.log('orderData',orderData);
+        
+          
       const hostelItem = {
         _id: orderData.hostelId,
         "rates.type": orderData.bedType,
-        "rates.quantity": { $gt: 0 }
+        "rates.quantity": { $gt: orderData.numberOfGuests }
       }
 
-      const updation = { $inc: { "rates.$.quantity": -1 } }
+      const updation = { $inc: { "rates.$.quantity": -(orderData.numberOfGuests) } }
 
       const updateHostel = await this._hostelRepository.updateHostel(hostelItem, updation)
 
@@ -126,13 +129,9 @@ export class BookingService implements IBookingService {
     try {
       const skip: number = (Math.abs(page - 1)) * 5
 
-
       const payload = verifyToken(token);
 
       const id = JSON.parse(JSON.stringify(payload)).payload;
-
-    
-      
 
       const bookings = await this._bookingRepository.getAllBookingsWithHostels({ userId:id._id }, skip)
 
@@ -156,12 +155,16 @@ export class BookingService implements IBookingService {
 
   async cancelBooking(reason:string,id:string){
     try {
-      const filter = {
-        cancelReason: reason,
-        isCancelled:true
+      console.log('Reason',reason);
+      
+      const filter = {$set:
+        {cancelReason: reason,
+        isCancelled:true}
       }
 
       const cancelling = await this._bookingRepository.update(id, filter)
+
+      
       
       if (cancelling) {
         return {

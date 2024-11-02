@@ -7,7 +7,7 @@ import sendMail from "../utils/mailer";
 import { generateRefreshToken, generateToken, verifyToken } from "../utils/jwt";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/userModel";
-import { uploadToS3 } from "../utils/s3Bucket";
+import { getPredesignedUrl, uploadToS3 } from "../utils/s3Bucket";
 import {
   isValidEmail,
   isValidPassword,
@@ -469,6 +469,11 @@ export class UserService implements IUserSrvice{
 
       const user = await this._userRepository.findById(id._id);
 
+        if (user?.Avatar) {
+          const key = user.Avatar.split(`.s3.amazonaws.com/`)[1]
+            user.Avatar=await getPredesignedUrl(process.env.AWS_S3_BUCKET_NAME!,key)
+        }
+      
       return {
         success: true,
         message: "User details fetched successfully",

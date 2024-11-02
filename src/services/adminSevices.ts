@@ -6,10 +6,10 @@ import bcrypt from "bcryptjs";
 import { isValidEmail, isValidPassword } from "../utils/vadidations";
 import { Role } from "../utils/enums";
 import { IAdminService } from "../interfaces/IServices";
-
+import { BookingRepository } from "../repositories/bookingRepository";
 
 export class AdminServices implements IAdminService{
-    constructor(private _userRepository: UserRepository, private _hotelRepository: HostelRepository) { }
+    constructor(private _userRepository: UserRepository, private _hotelRepository: HostelRepository,private _bookingRepository:BookingRepository) { }
     
 
     async loginUser(admin: Partial<UserDoc>) {
@@ -238,6 +238,24 @@ export class AdminServices implements IAdminService{
                 message:'Failed To fetch hostel'
           }
         }
-      }
+    }
+    
+    async getAllBookings(page:number) {
+        try {
+            const skip:number=(page-1)*5
+            const bookings = await this._bookingRepository.BookingsWithAllDetails(skip) 
+            return {
+                success: true,
+                message: 'Bookings fetched successfully',
+                data:bookings
+            }
+        } catch (error) {
+            console.log('Error from getAll bookings admin services', error) 
+            return {
+                success: false,
+                message:'Fetching bookings failed'
+            }
+        }
+    }
     
 }

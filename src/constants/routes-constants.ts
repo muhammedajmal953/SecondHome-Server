@@ -9,6 +9,7 @@ export const Admin_Routes = {
   REFRESH_TOKEN: "/token",
   BLOCK_HOSTEL: "/blockHostel",
   UNBLOCK_HOSTEL: "/unBlockHostel",
+  GET_ALL_BOOKINGS:"/getAllBookings/:page"
 };
 
 export const USER_ROUTES = {
@@ -51,6 +52,6 @@ export const VENDER_ROUTES = {
   GET_HOSTELS: "/getAllHostels/:page",
   GET_HOSTEL: "/getHostel/:id",
   EDIT_HOSTEL: "/editHostel/:id",
-  SHOW_BOOKINGS: '/get-bookings',
+  SHOW_BOOKINGS: '/get-bookings/:page',
   CONFIRM_CANCEL: '/confirm-cancel',
 };

@@ -7,12 +7,14 @@ import { HostelRepository } from "../repositories/hostelRepository";
 import { HostelService } from "../services/hostelService";
 import { HostelController } from "../controllers/hostelController";
 import { Admin_Routes } from "../constants/routes-constants";
+import { BookingRepository } from "../repositories/bookingRepository";
 
 const adminRouter = Router();
 const hostelRepository = new HostelRepository();
 const userRepository = new UserRepository();
+const bookingRepository=new BookingRepository()
 
-const adminService = new AdminServices(userRepository,hostelRepository);
+const adminService = new AdminServices(userRepository,hostelRepository,bookingRepository);
 const adminController = new AdminController(adminService);
 const hostelService = new HostelService(hostelRepository);
 const hostelController = new HostelController(hostelService);
@@ -66,5 +68,12 @@ adminRouter.put(
   adminAuth,
   hostelController.unBlockHostel.bind(hostelController)
 );
+
+adminRouter.get(
+  Admin_Routes.GET_ALL_BOOKINGS,
+  adminAuth,
+  adminController.getAllBooking.bind(adminController)
+)
+
 
 export default adminRouter;

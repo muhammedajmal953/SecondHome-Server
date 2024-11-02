@@ -21,24 +21,95 @@ export class BookingRepository
     filter: Record<string, unknown>,
     skip: number
   ) {
-    
     try {
-      return Booking.aggregate([
-        { $match: {userId:new mongoose.Types.ObjectId(filter.userId as string)} }, 
-        {
+      if (filter.userId) {
+        return Booking.aggregate([
+          {
+            $match: {
+              userId: new mongoose.Types.ObjectId(filter.userId as string),
+            },
+          },
+          {
             $lookup: {
-                from: 'hostels',
-                localField: 'hostelId',
-                foreignField: '_id',
-                as: 'hostelDetails'
-            }
+              from: "hostels",
+              localField: "hostelId",
+              foreignField: "_id",
+              as: "hostelDetails",
+            },
+          },
+          { $sort: { bookedAt: -1 } },
+          { $skip: skip },
+          { $limit: 5 },
+        ]).exec();
+      }
+      console.log("vendorID", filter.vendorId);
+      return Booking.aggregate([
+        { $match: { vendorId: filter.vendorId } },
+        {
+          $lookup: {
+            from: "hostels",
+            localField: "hostelId",
+            foreignField: "_id",
+            as: "hostelDetails",
+          },
         },
         { $sort: { bookedAt: -1 } },
-        { $skip: skip },     
-        { $limit: 5 }       
-    ]).exec();
+        { $skip: skip },
+        { $limit: 10 },
+      ]).exec();
     } catch (error) {
-        console.log(error)
+      console.log(error);
+    }
+  }
+
+  async BookingsWithAllDetails(skip: number) {
+    try {
+      return Booking.aggregate([
+        {
+          $lookup: {
+            from: "hostels",
+            localField: "hostelId",
+            foreignField: "_id",
+            as: "hostelDetails",
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "userDetails",
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "vendorId",
+            foreignField: "_id",
+            as: "vendorDetails",
+          },
+        },
+        {
+          $project: {
+            "hostelDetails.name": 1,
+            "hostelDetails.address": 1,
+            "userDetails.First_name": 1,
+            "vendorDetails.First_name": 1,
+            bedType: 1,
+            numberOfGuests: 1,
+            isActive: 1,
+            isCancelled: 1,
+          },
+        },
+        {
+          $skip: skip,
+        },
+        {
+          $limit: 10,
+        },
+      ]).exec();
+    } catch (error) {
+      console.log(error);
     }
   }
 }

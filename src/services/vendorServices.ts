@@ -9,25 +9,30 @@ import { generateRefreshToken, generateToken, verifyToken } from "../utils/jwt";
 import User from "../models/userModel";
 import { uploadToS3 } from "../utils/s3Bucket";
 import { HostelRepository } from "../repositories/hostelRepository";
-import { isValidEmail, isValidPassword, isValidPhone } from "../utils/vadidations";
+import {
+  isValidEmail,
+  isValidPassword,
+  isValidPhone,
+} from "../utils/vadidations";
 import { Role } from "../utils/enums";
 import { IVendorService } from "../interfaces/IServices";
-
+import { BookingRepository } from "../repositories/bookingRepository";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-export class VendorService implements IVendorService{
+export class VendorService implements IVendorService {
   constructor(
     private _userRepository: UserRepository,
     private _otpRepository: OtpRepository,
-    private _hostelRepository:HostelRepository
+    private _hostelRepository: HostelRepository,
+    private _bookingRepository: BookingRepository
   ) {
     this._userRepository = _userRepository;
     this._otpRepository = _otpRepository;
     this._hostelRepository = _hostelRepository;
   }
 
-  async createVendor(user: UserDoc) { 
+  async createVendor(user: UserDoc) {
     const email = user.Email;
     const existingEmail = await this._userRepository.getUserByEmail(email);
     if (existingEmail) {
@@ -39,43 +44,39 @@ export class VendorService implements IVendorService{
     }
     console.log("reach the service");
 
-
-
     if (!user.First_name && user.First_name.length <= 5) {
       return {
         success: false,
-        message:'First name must be sharacters and constains 5 letters'
-      }
+        message: "First name must be sharacters and constains 5 letters",
+      };
     }
     if (!user.Last_name && user.Last_name.length <= 3) {
       return {
         success: false,
-        message:'Last name must be sharacters and constains 5 letters'
-      }
+        message: "Last name must be sharacters and constains 5 letters",
+      };
     }
-    if (isValidPhone(user.Phone)===false) {
+    if (isValidPhone(user.Phone) === false) {
       return {
         success: false,
-        message:'Password must be valid'
-      }
+        message: "Password must be valid",
+      };
     }
-    if (isValidPassword(user.Password)===false) {
+    if (isValidPassword(user.Password) === false) {
       return {
         success: false,
-        message:'Password must be valid'
-      }
+        message: "Password must be valid",
+      };
     }
     if (isValidEmail(user.Email) === false) {
       return {
-           success: false,
-           message:'Password must be valid'
-      }
+        success: false,
+        message: "Password must be valid",
+      };
     }
-
 
     const salt = bcrypt.genSaltSync(10);
     const Password: string = user.Password;
-
 
     user.Password = bcrypt.hashSync(Password, salt);
 
@@ -152,13 +153,13 @@ export class VendorService implements IVendorService{
     console.log("reach the service");
 
     const token = generateToken(user);
-    const refreshToken=generateRefreshToken(user)
-    const existingOtp = await this._otpRepository.getOtpByEmail(email)
-    await this._otpRepository.update(existingOtp?._id as string,{Otp:""});
+    const refreshToken = generateRefreshToken(user);
+    const existingOtp = await this._otpRepository.getOtpByEmail(email);
+    await this._otpRepository.update(existingOtp?._id as string, { Otp: "" });
     return {
       success: true,
       message: "User verified successfully",
-      data: {token,refreshToken},
+      data: { token, refreshToken },
     };
   }
 
@@ -187,13 +188,12 @@ export class VendorService implements IVendorService{
           };
         } else if (existingEmail) {
           const token = generateToken(existingEmail);
-          const refreshToken=generateRefreshToken(existingEmail)
-
+          const refreshToken = generateRefreshToken(existingEmail);
 
           return {
             success: true,
             message: "Login Successful",
-            data: {token,refreshToken},
+            data: { token, refreshToken },
           };
         }
 
@@ -206,20 +206,20 @@ export class VendorService implements IVendorService{
         });
 
         await newUser.save();
-        const token = generateToken(newUser)
-        const refreshToken=generateRefreshToken(newUser)
+        const token = generateToken(newUser);
+        const refreshToken = generateRefreshToken(newUser);
 
         return {
           success: true,
           message: "User Logged in succefully",
-          data: {token,refreshToken},
+          data: { token, refreshToken },
         };
       }
 
       return {
         success: false,
-        message:"User Logged in failed"
-      }
+        message: "User Logged in failed",
+      };
     } catch (error) {
       console.log(error);
       return {
@@ -230,7 +230,7 @@ export class VendorService implements IVendorService{
     }
   }
 
-  async loginVendor(user: {[key:string]:string}) {
+  async loginVendor(user: { [key: string]: string }) {
     try {
       const userExist = await this._userRepository.getUserByEmail(user.Email);
 
@@ -243,24 +243,21 @@ export class VendorService implements IVendorService{
         };
       }
 
-     
       const values: string[] = Object.values(user);
-      if (isValidEmail(values[0] as string)===false) {
+      if (isValidEmail(values[0] as string) === false) {
         return {
           success: false,
           message: "enter a valid email",
           data: null,
         };
       }
-      if (isValidPassword(values[1] as string)===false) {
+      if (isValidPassword(values[1] as string) === false) {
         return {
           success: false,
           message: "enter valid password",
           data: null,
         };
       }
-    
-    
 
       const passwordMatch: boolean = bcrypt.compareSync(
         values[1],
@@ -314,12 +311,12 @@ export class VendorService implements IVendorService{
         };
       }
       const token = generateToken(userExist);
-      const refreshToken=generateRefreshToken(userExist)
+      const refreshToken = generateRefreshToken(userExist);
 
       return {
         success: true,
         message: "Login Successful",
-        data: {token,refreshToken},
+        data: { token, refreshToken },
       };
     } catch (error) {
       console.error("Error during login:", error);
@@ -358,10 +355,10 @@ export class VendorService implements IVendorService{
       sendMail("secondHome", "Forgot Password", user.Email, newOtp);
       const otpData = {
         Otp: newOtp,
-        ExpiresAt: new Date(Date.now() + 600000) // Expires in 10 minutes
+        ExpiresAt: new Date(Date.now() + 600000), // Expires in 10 minutes
       };
-      const existingOtp = await this._otpRepository.getOtpByEmail(email)
-       await this._otpRepository.update(existingOtp?._id as string,otpData);
+      const existingOtp = await this._otpRepository.getOtpByEmail(email);
+      await this._otpRepository.update(existingOtp?._id as string, otpData);
 
       console.log(newOtp, "the forgot password otp");
 
@@ -380,33 +377,34 @@ export class VendorService implements IVendorService{
     }
   }
 
-  async changePasswordVendor(email: string, password: {[key:string]:string}) {
+  async changePasswordVendor(
+    email: string,
+    password: { [key: string]: string }
+  ) {
     try {
       const salt = bcrypt.genSaltSync(10);
 
-      if (isValidPassword(password.newPassword)===false) {
+      if (isValidPassword(password.newPassword) === false) {
         return {
           success: false,
-          message:'enter a valid password'
-        }
+          message: "enter a valid password",
+        };
       }
 
-      
       const hashedPassword = bcrypt.hashSync(password?.newPassword, salt);
 
-      const userExist =await this._userRepository.getUserByEmail(email)
-      
+      const userExist = await this._userRepository.getUserByEmail(email);
+
       if (!userExist) {
         return {
           success: false,
-          message:'No User Found'
-        }
+          message: "No User Found",
+        };
       }
-     const id:string=userExist?._id as string
+      const id: string = userExist?._id as string;
       const user = await this._userRepository.update(id, {
         Password: hashedPassword,
       });
-
 
       if (!user) {
         return {
@@ -424,8 +422,8 @@ export class VendorService implements IVendorService{
       console.log(error);
       return {
         success: false,
-        message:'Passs word changing failed'
-      }
+        message: "Passs word changing failed",
+      };
     }
   }
 
@@ -503,17 +501,17 @@ export class VendorService implements IVendorService{
         };
       }
 
-      const userExist =await this._userRepository.getUserByEmail(email)
-      
+      const userExist = await this._userRepository.getUserByEmail(email);
+
       if (!userExist) {
         return {
           success: false,
-          message:'No User Found'
-        }
+          message: "No User Found",
+        };
       }
-     const id:string=userExist?._id as string
+      const id: string = userExist?._id as string;
       const result = await this._userRepository.update(id, {
-        lisence:imageUrl
+        lisence: imageUrl,
       });
       if (!result) {
         return {
@@ -562,34 +560,44 @@ export class VendorService implements IVendorService{
     }
   }
 
-  async editProfile(token: string, updates: {[key:string]:unknown}, file: Express.Multer.File) {
+  async editProfile(
+    token: string,
+    updates: { [key: string]: unknown },
+    file: Express.Multer.File
+  ) {
     try {
       const payload = verifyToken(token);
       const id = JSON.parse(JSON.stringify(payload)).payload;
 
-      if (typeof updates.First_name==="string"  && updates.First_name.length < 5) {
+      if (
+        typeof updates.First_name === "string" &&
+        updates.First_name.length < 5
+      ) {
         return {
           success: false,
-          message:'First name must be sharacters and constains 5 letters'
-        }
+          message: "First name must be sharacters and constains 5 letters",
+        };
       }
-      if ( typeof updates.Last_name === "string" && updates.Last_name.length < 3) {
+      if (
+        typeof updates.Last_name === "string" &&
+        updates.Last_name.length < 3
+      ) {
         return {
           success: false,
-          message:'Last name must be sharacters and constains 5 letters'
-        }
+          message: "Last name must be sharacters and constains 5 letters",
+        };
       }
-      if (isValidPhone(updates.Phone as number)===false) {
+      if (isValidPhone(updates.Phone as number) === false) {
         return {
           success: false,
-          message:'Phone Number must be valid'
-        }
+          message: "Phone Number must be valid",
+        };
       }
       if (isValidEmail(updates.Email as string) === false) {
         return {
-             success: false,
-             message:'Password must be valid'
-        }
+          success: false,
+          message: "Password must be valid",
+        };
       }
 
       if (file) {
@@ -632,21 +640,26 @@ export class VendorService implements IVendorService{
     }
   }
 
-  async newPassWord(data:{oldPassword:string,newPassword:string}, token: string) {
+  async newPassWord(
+    data: { oldPassword: string; newPassword: string },
+    token: string
+  ) {
     try {
       const { oldPassword, newPassword } = data;
       const payload = verifyToken(token);
 
       const id = JSON.parse(JSON.stringify(payload)).payload;
 
-      if (isValidPassword(newPassword)===false) {
+      if (isValidPassword(newPassword) === false) {
         return {
           success: false,
-          message:'enter a valid password'
-        }
+          message: "enter a valid password",
+        };
       }
 
-      const existingUser:UserDoc|null = await this._userRepository.findById(id._id);
+      const existingUser: UserDoc | null = await this._userRepository.findById(
+        id._id
+      );
 
       const passwordMatch: boolean = bcrypt.compareSync(
         oldPassword,
@@ -664,7 +677,9 @@ export class VendorService implements IVendorService{
 
       const hashedPassword = bcrypt.hashSync(newPassword, salt);
 
-      const result = await this._userRepository.update(id, {Password:hashedPassword});
+      const result = await this._userRepository.update(id, {
+        Password: hashedPassword,
+      });
 
       return {
         success: true,
@@ -679,20 +694,24 @@ export class VendorService implements IVendorService{
       };
     }
   }
-  async refreshToken(token:string) {
+  async refreshToken(token: string) {
     try {
-      const payload = verifyToken(token)
-      const decoded = JSON.parse(JSON.stringify(payload)).payload
-      
-      const userData = await this._userRepository.findById(decoded._id)
-      
-      if (!userData) return { success: false, message: 'Vendor Not found' }
-      if (!userData.IsActive) throw new Error("Token verification failed")
-      
-      const accessToken =generateToken(userData)
-      const refreshToken = generateRefreshToken(userData)
-      
-      return{ success:true,message:'Token refreshed successfully',data:{accessToken,refreshToken}}
+      const payload = verifyToken(token);
+      const decoded = JSON.parse(JSON.stringify(payload)).payload;
+
+      const userData = await this._userRepository.findById(decoded._id);
+
+      if (!userData) return { success: false, message: "Vendor Not found" };
+      if (!userData.IsActive) throw new Error("Token verification failed");
+
+      const accessToken = generateToken(userData);
+      const refreshToken = generateRefreshToken(userData);
+
+      return {
+        success: true,
+        message: "Token refreshed successfully",
+        data: { accessToken, refreshToken },
+      };
     } catch (error) {
       console.error("Error in refreshToken:", error);
       throw error;
@@ -701,64 +720,123 @@ export class VendorService implements IVendorService{
 
   async resendOtp(email: string) {
     try {
-      const registeredUser = await this._userRepository.getUserByEmail(email)
-      
+      const registeredUser = await this._userRepository.getUserByEmail(email);
+
       if (!registeredUser) {
-        return {success:false,message:'No user Found'}
+        return { success: false, message: "No user Found" };
       }
 
-      const otp = generateOtp()
+      const otp = generateOtp();
       sendMail("secondHome", "Resended Otp", email, otp);
 
-      console.log('vendor resend Otp:-',otp);
-      
+      console.log("vendor resend Otp:-", otp);
+
       const otpData = {
         Otp: otp,
-        ExpiresAt: new Date(Date.now() + 600000) 
+        ExpiresAt: new Date(Date.now() + 600000),
       };
-      const existingOtp = await this._otpRepository.getOtpByEmail(email)
-      await this._otpRepository.update(existingOtp?._id as string,otpData);
+      const existingOtp = await this._otpRepository.getOtpByEmail(email);
+      await this._otpRepository.update(existingOtp?._id as string, otpData);
       return {
         success: true,
-        message:'otp resend successfully'
-     } 
+        message: "otp resend successfully",
+      };
     } catch (error) {
-      console.error('Error from Userservice.resendOtp', error);  
+      console.error("Error from Userservice.resendOtp", error);
       return {
         success: false,
-        message:'resend otp failed'
-      }
+        message: "resend otp failed",
+      };
     }
   }
 
- async getAllHostels(page:number,searchQuery:string,token:string) {
+  async getAllHostels(page: number, searchQuery: string, token: string) {
     try {
-      const skip = (page - 1) * 5
-      const payload = verifyToken(token)
-      const decoded = JSON.parse(JSON.stringify(payload)).payload
-           
+      const skip = (page - 1) * 5;
+      const payload = verifyToken(token);
+      const decoded = JSON.parse(JSON.stringify(payload)).payload;
+
       const filter: { [key: string]: unknown } = {
-        owner:decoded._id
-      }
-      
+        owner: decoded._id,
+      };
+
       if (searchQuery) {
-          filter['$or'] = [
-              { name: { $regex: searchQuery, $options: 'i' } },
-              {category:{ $regex: searchQuery, $options:'i'}}
-          ] 
+        filter["$or"] = [
+          { name: { $regex: searchQuery, $options: "i" } },
+          { category: { $regex: searchQuery, $options: "i" } },
+        ];
       }
-      const hostels = await this._hostelRepository.findAll(filter, skip)
-      
+      const hostels = await this._hostelRepository.findAll(filter, skip);
+
       return {
         success: true,
-        message: 'hostel fetched successfully',
-        data:hostels
-      }
+        message: "hostel fetched successfully",
+        data: hostels,
+      };
     } catch (error) {
       console.log(error);
-      return { success: false, message: 'internal sever error' }
+      return { success: false, message: "internal sever error" };
     }
-    
+  }
+
+  async getAllBookings(page: string, token: string) {
+    try {
+      const skip: number = (Number(page) - 1) * 5;
+
+      const payload = verifyToken(token);
+      const decoded = JSON.parse(JSON.stringify(payload)).payload;
+
+      
+      
+
+      const bookings = await this._bookingRepository.getAllBookingsWithHostels(
+        { vendorId: decoded._id },
+        skip
+      );
+
+      return {
+        success: true,
+        message: "Hostels fetched success fully",
+        data: bookings,
+      };
+    } catch (error) {
+      console.error("Error form vendor service hostel get booking", error);
+    }
+  }
+
+  async confirmCancel(id: string) {
+    try {
+      const canceling = await this._bookingRepository.update(id, {
+        isActive: false,
+      });
+
+
+      const hostelItem = {
+        _id: canceling?.hostelId,
+        "rates.type": canceling?.bedType,
+      }
+
+      const updation = { $inc: { "rates.$.quantity": canceling?.numberOfGuests } }
+
+       await this._hostelRepository.updateHostel(hostelItem, updation)
+
+      
+
+      console.log(canceling);
+      
+      if (canceling) {
+        return {
+          success: true,
+          message: "cancel confirmed",
+        };
+      }
+    } catch (error) {
+      console.error("Error from confirmcancel vendor sevice:-", error);
+      return {
+        success: false,
+        message:'Confirm Canceling booking failed'
+      }
+    }
   }
 }
-
+ 

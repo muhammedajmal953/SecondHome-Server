@@ -74,6 +74,9 @@ export class BookingController {
     async cancelBooking(req: Request, res: Response) {
         try {
             const { reason } = req.body
+            
+            console.log('controller cancell reason',reason);
+            
             const { id } = req.query
             
             const result = await this._bookingService.cancelBooking(reason, id as string)
@@ -85,7 +88,7 @@ export class BookingController {
             return res.status(Status.OK).json(result)
         } catch (error) {
             console.log('Error from the cancel Hostel booking Controller',error);
-            
+            res.status(Status.INTERNAL_SERVER_ERROR).json('internal server error')
         }
-    }
+    } 
 }   

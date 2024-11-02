@@ -9,6 +9,7 @@ const bookingModel = new Schema<IOrder>({
     userId: ObjectId,
     bedType: String,
     checkInDate: Date,
+    vendorId:String,
     isActive: {
         type: Boolean,
         default:true

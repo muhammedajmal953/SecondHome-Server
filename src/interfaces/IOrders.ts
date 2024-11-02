@@ -4,6 +4,7 @@ import { Document } from "mongoose"
 export interface IOrder extends Document{
     hostelId: string,
     userId: string,
+    vendorId:string,
     bookedAt: Date,
     checkInDate:Date,
     bedType: string,

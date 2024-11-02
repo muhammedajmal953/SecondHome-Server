@@ -311,6 +311,51 @@ class VendorController {
         .json({ success: false, message: "Internal Server Error" });
     }
   }
+
+ async getAllBookings(req: Request, res: Response) {
+    try {
+      const { page } = req.params;
+      // const { searchQuery } = req.query;
+      const bearer = req.headers.authorization!;
+        const token = bearer.split(" ")[1];
+        
+
+        if (!token) {
+            console.log("token not found");
+    
+            return res
+              .status(Status.UN_AUTHORISED)
+              .json({ success: false, message: "Token not found" });
+      }
+      
+      const result = await this._vendorService.getAllBookings(page, token)
+      
+      res.status(Status.OK).json(result)
+    } catch (error) {
+      console.error('Error from the getbooking vendor controller:-', error);
+      return res.status(Status.INTERNAL_SERVER_ERROR).json({ message: 'internal sever error' })
+    }
+  }
+
+ async conformCancel(req: Request, res: Response) {
+    try {
+      const bookingId = req.query.id
+     console.log('id ',bookingId);
+     
+      if (!bookingId) {
+        return res.status(Status.BAD_REQUEST).json({message:'Bad request'})
+      }
+
+      const result=await this._vendorService.confirmCancel(bookingId as string)
+      
+      if (result) {
+        return res.status(Status.OK).json(result)
+      }
+    } catch (error) {
+      console.error('Error from Vendor controller cancel confirm',error);
+      return res.status(Status.INTERNAL_SERVER_ERROR).json({message:'Internal Server Error'})
+    }
+  }
 }
 
 export default VendorController;

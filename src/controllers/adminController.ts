@@ -215,4 +215,20 @@ export class AdminController {
       });
     }
   }
+  async getAllBooking(req: Request, res: Response) {
+    try {
+      const { page } = req.params
+      
+      const result = await this._adminService.getAllBookings(Number(page))
+      
+      if (!result || !result.success) {
+        return res.status(Status.NOT_FOUND).json({message:'Bookings not found'})
+      }
+
+      return res.status(Status.OK).json(result)
+    } catch (error) {
+      console.log('Error adminController.getAllbooking', error)
+      return res.status(Status.INTERNAL_SERVER_ERROR).json({ message:'Internal Server Error'})
+    }
+  }
 }

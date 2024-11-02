@@ -9,13 +9,15 @@ import { HostelService } from '../services/hostelService';
 import { HostelController } from '../controllers/hostelController';
 import { vendorAuth } from '../middlewares/vendorAuthMiddleWare';
 import { VENDER_ROUTES } from '../constants/routes-constants';
+import { BookingRepository } from '../repositories/bookingRepository';
 
 const venderRouter = Router();
 const otpRepository = new OtpRepository();
 const userRepository = new UserRepository();
 const hostelRepository = new HostelRepository();
+const bookingRepository=new BookingRepository
 
-const venderService = new VendorService(userRepository,otpRepository,hostelRepository);
+const venderService = new VendorService(userRepository,otpRepository,hostelRepository,bookingRepository);
 const vendorController = new VendorController(venderService);
 const hostelService = new HostelService(hostelRepository);
 const hostelController = new HostelController(hostelService);   
@@ -51,6 +53,11 @@ venderRouter.get(VENDER_ROUTES.GET_HOSTELS, vendorAuth, vendorController.getmyHo
 
 venderRouter.get(VENDER_ROUTES.GET_HOSTEL, vendorAuth, hostelController.getHostel.bind(hostelController))
 
-venderRouter.put(VENDER_ROUTES.EDIT_HOSTEL,upload.array('photos', 5),vendorAuth,hostelController.editHostel.bind(hostelController))
+venderRouter.put(VENDER_ROUTES.EDIT_HOSTEL, upload.array('photos', 5), vendorAuth, hostelController.editHostel.bind(hostelController))
+
+venderRouter.get(VENDER_ROUTES.SHOW_BOOKINGS, vendorAuth, vendorController.getAllBookings.bind(vendorController))
+
+venderRouter.put(VENDER_ROUTES.CONFIRM_CANCEL,vendorAuth,vendorController.conformCancel.bind(vendorController))
  
+
 export default venderRouter;

@@ -2,7 +2,7 @@ import { IHostelService } from "../interfaces/IHostel";
 import { IResponse } from "../interfaces/IResponse";
 import { HostelRepository } from "../repositories/hostelRepository";
 import { verifyToken } from "../utils/jwt";
-import { uploadToS3 } from "../utils/s3Bucket";
+import { getPredesignedUrl, uploadToS3 } from "../utils/s3Bucket";
 
 export class HostelService implements IHostelService {
   constructor(private _hostelRepository: HostelRepository) {
@@ -97,6 +97,16 @@ export class HostelService implements IHostelService {
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
+
+      for (const hostel of hostels) {
+        if (hostel.photos && hostel.photos.length > 0) {
+          hostel.photos = await Promise.all(hostel.photos.map(async (url: string) => {
+            const key = url.split(`.s3.amazonaws.com/`)[1]
+            return getPredesignedUrl(process.env.AWS_S3_BUCKET_NAME!,key)
+          }))
+        }
+      }
+
       return {
         success: true,
         message: "All hostels are fetched",
@@ -193,6 +203,15 @@ export class HostelService implements IHostelService {
           message: "No Hostel Found",
         };
       }
+
+     
+        if (hostel.photos && hostel.photos.length > 0) {
+          hostel.photos = await Promise.all(hostel.photos.map(async (url: string) => {
+            const key = url.split(`.s3.amazonaws.com/`)[1]
+            return getPredesignedUrl(process.env.AWS_S3_BUCKET_NAME!,key)
+          }))
+        }
+
       return {
         success: true,
         message: "Hostel fetched successfully",
