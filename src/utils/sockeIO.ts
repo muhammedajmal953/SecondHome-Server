@@ -27,28 +27,61 @@ io.on('connection', (socket) => {
         
     })
 
-    socket.on('loadMessages', (roomId) => {
-        return Chat.find({roomId})
-    })
+    socket.on('loadMessages', async (roomId) => {
+        try {
+            const chat = await Chat.findOne({ roomId });
+            if (chat) {
+                socket.emit('loadMessages', chat); 
+            } else {
+                socket.emit('loadMessages', []); 
+            }
+        } catch (error) {
+            console.error('Error loading messages:', error);
+            socket.emit('error', 'Failed to load messages');
+        }
+    });
 
-    socket.on('message',async (messageData) => {
-        const { roomId, sender, content } = messageData
+    socket.on('message', async (messageData) => {
+        
+        const { sender, content, userId, vendorId } = messageData
+        console.log(content);
+        
+        let {roomId}=messageData
         const message = { sender, content, time: new Date() }
         
+        if (!roomId) {
+            roomId=`${userId}-${vendorId}`
+        }
+        console.log('vendor id',vendorId);
+        console.log('userid id',userId);
         await Chat.findOneAndUpdate(
-            { roomId },
-            { $push: { messages: message } },
+            { roomId , userId, vendorId},
+            {
+                $setOnInsert: { roomId, userId, vendorId },
+                
+                $push: { messages: message }
+            },
             {upsert:true,new:true}
-        )
+        ) 
 
         io.to(roomId).emit('message',message)
     })
 
-    
+    socket.on('rooms', (details:{id:string,role:string}) => {
+        if (details.role === 'user') {
+            return Chat.find({userId:details.id})
+        }
+        console.log('id in all rooms',details.id);
+        
+        return Chat.find({vendorId:details.id})
+    })
     
     socket.on('disconnection',()=> {
         console.log('disconnected:-',socket.id); 
     })
+
+   
+
 })
 
  
