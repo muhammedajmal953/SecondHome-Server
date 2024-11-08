@@ -17,6 +17,7 @@ import {
 import { Role } from "../utils/enums";
 import { IVendorService } from "../interfaces/IServices";
 import { BookingRepository } from "../repositories/bookingRepository";
+import { Wallet } from "../models/walletModel";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -786,9 +787,6 @@ export class VendorService implements IVendorService {
       const payload = verifyToken(token);
       const decoded = JSON.parse(JSON.stringify(payload)).payload;
 
-      
-      
-
       const bookings = await this._bookingRepository.getAllBookingsWithHostels(
         { vendorId: decoded._id },
         skip
@@ -810,20 +808,63 @@ export class VendorService implements IVendorService {
         isActive: false,
       });
 
-
       const hostelItem = {
         _id: canceling?.hostelId,
         "rates.type": canceling?.bedType,
+      };
+
+      const updation = {
+        $inc: { "rates.$.quantity": canceling?.numberOfGuests },
+      };
+
+      await this._hostelRepository.updateHostel(hostelItem, updation);
+
+      console.log("vendorId:", canceling?.vendorId);
+
+      const vendorWallet = await Wallet.findOne({
+        userId: canceling?.vendorId.toString(),
+      });
+      if (vendorWallet && canceling) {
+        console.log("entered wallet");
+
+        vendorWallet.WalletBalance -= canceling.totalAmount;
+        vendorWallet?.transaction.push({
+          type: "debit",
+          description: `amount returened `,
+          from: canceling.vendorId,
+          amount: canceling.totalAmount,
+        });
+        await vendorWallet.save();
+      }
+      const userWallet = await Wallet.findOne({
+        userId: canceling?.userId.toString(),
+      });
+      if (userWallet && canceling) {
+        console.log("entered wallet");
+
+        userWallet.WalletBalance -= canceling.totalAmount;
+        userWallet?.transaction.push({
+          type: "debit",
+          description: `amount returened `,
+          from: canceling.vendorId,
+          amount: canceling.totalAmount,
+        });
+        await userWallet.save();
+      } else if (canceling) {
+        await Wallet.create({
+          userId: canceling.userId,
+          WalletBalance: canceling.totalAmount,
+          transaction: [
+            {
+              type: "credit",
+              description: `hostel puchased `,
+              from: canceling.vendorId,
+              amount: canceling.totalAmount,
+            },
+          ],
+        });
       }
 
-      const updation = { $inc: { "rates.$.quantity": canceling?.numberOfGuests } }
-
-       await this._hostelRepository.updateHostel(hostelItem, updation)
-
-      
-
-      console.log(canceling);
-      
       if (canceling) {
         return {
           success: true,
@@ -834,9 +875,38 @@ export class VendorService implements IVendorService {
       console.error("Error from confirmcancel vendor sevice:-", error);
       return {
         success: false,
-        message:'Confirm Canceling booking failed'
-      }
+        message: "Confirm Canceling booking failed",
+      };
     }
   }
+
+  async getUserWallet(token: string) {
+    try {
+      const payload = verifyToken(token);
+
+      const id = JSON.parse(JSON.stringify(payload)).payload;
+
+      const wallet = await Wallet.findOne({ userId: id._id });
+
+      if (!wallet) {
+        return {
+          success: false,
+          message: "wallet not found",
+        };
+      }
+
+      return {
+        success: true,
+        message: "Wallet fetched successfully",
+        data: wallet,
+      };
+    } catch (error) {
+      console.error("Error from Userservice.getUserWallet", error);
+      return {
+        success: false,
+        message: "Failed to fetch wallet",
+      };
+    }
+  }
+  
 }
- 

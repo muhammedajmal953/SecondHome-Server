@@ -28,11 +28,13 @@ adminRouter.get(
   Admin_Routes.Get_All_Users,
   adminController.getAllUsers.bind(adminController)
 );
+
 adminRouter.put(
   Admin_Routes.BLOCK_USER,
   adminAuth,
   adminController.blockUser.bind(adminController)
 );
+
 adminRouter.put(
   Admin_Routes.UNBLOCK_USER,
   adminAuth,

@@ -34,5 +34,5 @@ export interface IWishlistRepository extends IBaseRepository<IWishlist>{
 
 
 export interface IBookingRepository extends IBaseRepository<IOrder>{
-    getOrderWithAllDetails(id:string):Promise<IOrder|null>
+    getOrderWithAllDetails(id: string): Promise<IOrder | null>
 }

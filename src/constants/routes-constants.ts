@@ -6,7 +6,7 @@ export const Admin_Routes = {
   GET_ALL_VENDORS: "/getAllVendors/:page/:limit",
   VERIFY_VENDOR: "/verifyVendor",
   GET_ALL_HOSTELS: "/getAllHostel/:page",
-  REFRESH_TOKEN: "/token",
+  REFRESH_TOKEN: "/token/:refreshToken",
   BLOCK_HOSTEL: "/blockHostel",
   UNBLOCK_HOSTEL: "/unBlockHostel",
   GET_ALL_BOOKINGS:"/getAllBookings/:page"
@@ -23,7 +23,7 @@ export const USER_ROUTES = {
   EDIT_PROFILE: "/edit-profile",
   GET_ALL_HOSTEL: "/getAllHostel/:page",
   CHANGE_PASSWORD_NEW: "/changePassword",
-  TOKEN: "/token",
+  TOKEN: "/token/:refreshToken",
   RESEND_OTP: "/resend-otp",
   GET_HOSTEL: "/getHostel/:id",
   ADD_TO_WISHLIST: '/add-to-wishlist',
@@ -32,7 +32,8 @@ export const USER_ROUTES = {
   CONFIRM_ORDER: '/confirm-order',
   SAVE_BOOKING: '/save-booking',
   GET_BOOKINGS: '/get-bookings/:page',
-  CANCEL_BOOKING:'/cancel-booking',
+  CANCEL_BOOKING: '/cancel-booking', 
+   WALLET_BALANCE:'/wallet-balance'
 }; 
 
 export const VENDER_ROUTES = {
@@ -47,11 +48,12 @@ export const VENDER_ROUTES = {
   EDIT_PROFILE: "/edit-profile",
   ADD_HOSTEL: "/addHostel",
   CHANGE_PASSWORD_NEW: "/changePassword",
-  TOKEN: "/token",
+  TOKEN: "/token/:refreshToken",
   RESEND_OTP: "/resend-otp",
   GET_HOSTELS: "/getAllHostels/:page",
   GET_HOSTEL: "/getHostel/:id",
   EDIT_HOSTEL: "/editHostel/:id",
   SHOW_BOOKINGS: '/get-bookings/:page',
   CONFIRM_CANCEL: '/confirm-cancel',
+  WALLET_BALANCE:'/wallet-balance'
 };

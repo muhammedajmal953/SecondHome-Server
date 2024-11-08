@@ -15,6 +15,7 @@ import {
 } from "../utils/vadidations";
 import { Role } from "../utils/enums";
 import { IUserSrvice } from "../interfaces/IServices";
+import { Wallet } from "../models/walletModel";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -681,6 +682,36 @@ export class UserService implements IUserSrvice{
       return {
         success: false,
         message:'Failed to Resend Otp'
+      }
+    }
+  }
+
+
+  async getUserWallet(token:string) {
+    try {
+      const payload = verifyToken(token);
+
+      const id = JSON.parse(JSON.stringify(payload)).payload;
+
+      const wallet = await Wallet.findOne({ userId: id._id })
+      
+      if (!wallet) {
+        return {
+          success: false,
+          message:'wallet not found'
+        }
+      }
+
+      return {
+        success: true,
+        message: 'Wallet fetched successfully',
+        data:wallet
+      }
+    } catch (error) {
+      console.error("Error from Userservice.getUserWallet", error);
+      return {
+        success: false,
+        message:'Failed to fetch wallet'
       }
     }
   }

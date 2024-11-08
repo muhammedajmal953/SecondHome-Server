@@ -12,8 +12,12 @@ const walletSchema = new Schema<IWallet>({
             type:String,
             enum: ['debit', 'credit'],
         },
+        date: {
+            type: Date,
+            default:new Date()
+        }, 
         from: String,
-        amount: Number,
+        amount: Number, 
         description:String
     }]
 })

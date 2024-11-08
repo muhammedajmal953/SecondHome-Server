@@ -3,9 +3,6 @@ import { IWishlistService } from "../interfaces/IServices";
 import { HostelRepository } from "../repositories/hostelRepository";
 import { WishlistRepository } from "../repositories/wishlistRepository";
 
-
-
-
 export class WishlistServices implements IWishlistService{
     
     constructor(private _wislistRepository: WishlistRepository,private _hostelRepository:HostelRepository) { }
@@ -56,6 +53,7 @@ export class WishlistServices implements IWishlistService{
             }
         }
     }
+
     async getAllWishList(page: number, id: string): Promise<IResponse> {
         try {
             const wishlist = await this._wislistRepository.getWishlistByUserId(id)

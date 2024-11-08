@@ -11,9 +11,19 @@ export class BookingController {
         try {
             const data = req.body
             
-            console.log('fromUserData',data);
+            const bearer = req.headers.authorization!;
 
-            const result = await this._bookingService.createOrder(data)
+            if (!bearer) {
+              return res
+              .status(Status.UN_AUTHORISED).json({
+                success: false,
+                message: "Unauthorized: No token provided",
+              })
+            }
+      
+            const token = bearer.split(" ")[1];
+
+            const result = await this._bookingService.createOrder(data,token)
             
             if (!result.data) {
                 return res.status(Status.UN_AUTHORISED).json(result)

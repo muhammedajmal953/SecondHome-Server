@@ -71,7 +71,7 @@ export interface IRazorpayResponse {
 }
 
 export interface IBookingService{
-  createOrder(orderData: Record<string, unknown>): Promise<IResponse>
+  createOrder(orderData: Record<string, unknown>,token:string): Promise<IResponse>
   
   saveBooking(orderData:IOrder):Promise<IResponse>
 }

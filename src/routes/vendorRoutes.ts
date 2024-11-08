@@ -59,5 +59,6 @@ venderRouter.get(VENDER_ROUTES.SHOW_BOOKINGS, vendorAuth, vendorController.getAl
 
 venderRouter.put(VENDER_ROUTES.CONFIRM_CANCEL,vendorAuth,vendorController.conformCancel.bind(vendorController))
  
+venderRouter.get(VENDER_ROUTES.WALLET_BALANCE, vendorAuth,vendorController.walletBalance.bind(vendorController))
 
 export default venderRouter;

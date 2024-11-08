@@ -356,6 +356,23 @@ class VendorController {
       return res.status(Status.INTERNAL_SERVER_ERROR).json({message:'Internal Server Error'})
     }
   }
+  async walletBalance(req: Request, res: Response) {
+    try {
+      const bearer = req.headers.authorization!;
+      const token = bearer.split(" ")[1];
+
+      const result = await this._vendorService.getUserWallet(token)
+      if (!result.success) {
+        return res.status(Status.NOT_FOUND).json(result)
+      }
+      
+      return res.status(Status.OK).json(result)
+    } catch (error) {
+      console.log(error);
+      return res.status(Status.INTERNAL_SERVER_ERROR).json({message:'internal server error'})
+      
+    }
+  }
 }
 
 export default VendorController;

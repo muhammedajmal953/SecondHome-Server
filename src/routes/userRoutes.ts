@@ -78,6 +78,9 @@ userRouter.post(USER_ROUTES.SAVE_BOOKING, userAuth, bookingController.saveBookin
 userRouter.get(USER_ROUTES.GET_BOOKINGS, userAuth, bookingController.getAllbokings.bind(bookingController))
 userRouter.put(USER_ROUTES.CANCEL_BOOKING, userAuth, bookingController.cancelBooking.bind(bookingController))
 
+//wallet balance
+userRouter.get(USER_ROUTES.WALLET_BALANCE,userAuth,userController.walletBalance.bind(userController))
+
 
  
 

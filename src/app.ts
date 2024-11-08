@@ -1,7 +1,6 @@
 import express, { Express } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import connectDB from './db';
 import morgan from 'morgan';
 import userRouter from './routes/userRoutes';
 
@@ -11,10 +10,10 @@ import fs from 'fs'
 import { job } from './utils/cronJob';
 import path from 'path';
 
-const app: Express = express();
+
+export const app: Express = express();
 
 dotenv.config();
-connectDB();
 job.start()
 
 app.use(express.json());
@@ -40,10 +39,7 @@ app.use('/',userRouter)
 app.use('/vendor', venderRouter)
 app.use('/admin',adminRouter)  
 
-
-app.listen(process.env.PORT, () => {
-    console.log(`Server is running on port ${process.env.PORT}`)
-})
+export default app
 
 
  
