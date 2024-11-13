@@ -16,7 +16,7 @@ export interface IAdminService {
 export interface IUserSrvice {
   createUser(user: UserDoc): Promise<IResponse>;
   verifyUser(otp: string, email: string): Promise<IResponse>;
-  singleSignIn(idToken: string): Promise<IResponse>;
+  singleSignIn(idToken: string,fcmToken:string): Promise<IResponse>;
   loginUser(user: { [key: string]: unknown }): Promise<IResponse>;
   forgotPassword(email: string): Promise<IResponse>;
   forgotOtpHandle(email: string, otp: string): Promise<IResponse>;
@@ -43,7 +43,7 @@ export interface IUserSrvice {
 export interface IVendorService{
     createVendor(user: UserDoc): Promise<IResponse>;
     verifyVendor(otp: string, email: string): Promise<IResponse>;
-    singleSignInVendor(idToken: string): Promise<IResponse>;
+    singleSignInVendor(idToken: string,fcmToken:string): Promise<IResponse>;
     loginVendor(user: {[key:string]:string}): Promise<IResponse>;
     forgotPassword(email: string): Promise<IResponse>;
     changePasswordVendor(email: string, password: {[key:string]:string}): Promise<IResponse>;

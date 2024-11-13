@@ -29,9 +29,10 @@ const bookingModel = new Schema<IOrder>({
     cancelReason:String,
     paymentDetails: {
         razorpay_payment_id: String,
-        razprpay_order_id: String,
+        razorpay_order_id: String,
         razorpay_signature:String
     }
 })
 
-export const Booking=mongoose.model<IOrder>('Booking',bookingModel)
+export const Booking = mongoose.model<IOrder>('Booking', bookingModel)
+

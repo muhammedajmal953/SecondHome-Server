@@ -12,6 +12,9 @@ class VendorController {
   async createVendor(req: Request, res: Response) {
     try {
       const newUser = req.body;
+
+      console.dir('fcm token from vendorToken from the vendor controller',newUser.fcmToken) 
+
       const result = await this._vendorService.createVendor(newUser);
 
       if (!result.success) {
@@ -70,11 +73,11 @@ class VendorController {
 
   async singleSignInVendor(req: Request, res: Response) {
     try {
-      const { PROVIDER_ID } = req.body;
+      const { PROVIDER_ID,fcmToken } = req.body;
 
       console.log("idtoken vendor cntrlr", PROVIDER_ID);
 
-      const result = await this._vendorService.singleSignInVendor(PROVIDER_ID);
+      const result = await this._vendorService.singleSignInVendor(PROVIDER_ID,fcmToken);
       return res.status(Status.OK).json(result);
     } catch (error) {
         console.error("Error single singn in:", error);

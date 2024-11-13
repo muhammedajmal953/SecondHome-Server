@@ -12,6 +12,7 @@ class UserController {
   async createUser(req: Request, res: Response) {
     try {
       const newUser = req.body;
+        console.log('fcm token from userToken from the ',newUser.fcmToken)      
       const result = await this._userService.createUser(newUser);
 
       if (!result.success) {
@@ -31,9 +32,10 @@ class UserController {
 
   async verifyUser(req: Request, res: Response) {
    try {
-     const { otp, email } = req.body;
+     const {  email,otp } = req.body;
      
-     if(!otp||email) return res.status(Status.BAD_REQUEST).json({message:'Email and OTP required'})
+     
+     if(!otp||!email) return res.status(Status.BAD_REQUEST).json({message:'Email and OTP required'})
 
      const registeredUser = await userRepository.getUserByEmail(email);
      
@@ -84,8 +86,8 @@ class UserController {
 
   async singleSignIn(req: Request, res: Response) {
     try {
-      const { PROVIDER_ID } = req.body;
-      const result = await this._userService.singleSignIn(PROVIDER_ID);
+      const { PROVIDER_ID,fcmToken } = req.body;
+      const result = await this._userService.singleSignIn(PROVIDER_ID,fcmToken);
 
       if (!result?.success) {
         console.error(result?.message)

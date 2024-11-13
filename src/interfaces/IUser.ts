@@ -18,6 +18,7 @@ export interface UserDoc  extends Document{
   Gender: 'Male' | 'Female' | 'Others';
   isKYCVerified: boolean
   lisence: string
+  fcmToken: string
 }
 
 

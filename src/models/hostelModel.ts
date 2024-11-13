@@ -24,7 +24,7 @@ const HostelModel = new mongoose.Schema<IHostel>({
         {
             type: { type: String, required: true },
             price: { type: Number, required: true },
-            quantity:{type:Number,required:true}
+            quantity:{type:Number}
         }
     ],
     foodRate: Number,

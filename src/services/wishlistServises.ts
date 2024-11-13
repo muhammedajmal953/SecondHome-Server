@@ -104,7 +104,5 @@ export class WishlistServices implements IWishlistService{
                 message:'Hostel Remove failed'
             }
         }
-    }
-    
-    
+    }  
 }   

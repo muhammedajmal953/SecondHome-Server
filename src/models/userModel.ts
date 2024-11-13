@@ -37,7 +37,8 @@ const userSchema = new Schema<UserDoc>({
         type: Boolean,
         default:false,
     },
-    lisence: String
+    lisence: String,
+    fcmToken:String
 });
 
 const User = mongoose.model<UserDoc>('User', userSchema);

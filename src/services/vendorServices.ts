@@ -18,6 +18,7 @@ import { Role } from "../utils/enums";
 import { IVendorService } from "../interfaces/IServices";
 import { BookingRepository } from "../repositories/bookingRepository";
 import { Wallet } from "../models/walletModel";
+import { sendNotification } from "../utils/pushNotification";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -95,6 +96,7 @@ export class VendorService implements IVendorService {
     console.log(newOtp);
 
     sendMail("Second Home", "OTP", newUser.Email, newOtp);
+    console.log("vendor:-", user);
 
     await this._otpRepository.create({
       Email: email,
@@ -164,7 +166,7 @@ export class VendorService implements IVendorService {
     };
   }
 
-  async singleSignInVendor(idToken: string) {
+  async singleSignInVendor(idToken: string, fcmToken: string) {
     try {
       console.log("id token vendor", idToken);
 
@@ -190,7 +192,9 @@ export class VendorService implements IVendorService {
         } else if (existingEmail) {
           const token = generateToken(existingEmail);
           const refreshToken = generateRefreshToken(existingEmail);
-
+          await this._userRepository.update(existingEmail._id, {
+            $set: { fcmToken: fcmToken },
+          });
           return {
             success: true,
             message: "Login Successful",
@@ -204,6 +208,7 @@ export class VendorService implements IVendorService {
           Last_name: family_name,
           isVerified: true,
           Role: Role.Vendor,
+          fcmToken,
         });
 
         await newUser.save();
@@ -313,6 +318,8 @@ export class VendorService implements IVendorService {
       }
       const token = generateToken(userExist);
       const refreshToken = generateRefreshToken(userExist);
+
+      await this._userRepository.update(userExist._id,{fcmToken:user.fcmToken})
 
       return {
         success: true,
@@ -835,6 +842,19 @@ export class VendorService implements IVendorService {
           amount: canceling.totalAmount,
         });
         await vendorWallet.save();
+      } else if (canceling) {
+        await Wallet.create({
+          userId: canceling.vendorId,
+          WalletBalance: canceling.totalAmount,
+          transaction: [
+            {
+              type: "credit",
+              description: `hostel puchased `,
+              from: canceling.vendorId,
+              amount: canceling.totalAmount,
+            },
+          ],
+        });
       }
       const userWallet = await Wallet.findOne({
         userId: canceling?.userId.toString(),
@@ -842,9 +862,9 @@ export class VendorService implements IVendorService {
       if (userWallet && canceling) {
         console.log("entered wallet");
 
-        userWallet.WalletBalance -= canceling.totalAmount;
+        userWallet.WalletBalance += canceling.totalAmount;
         userWallet?.transaction.push({
-          type: "debit",
+          type: "credit",
           description: `amount returened `,
           from: canceling.vendorId,
           amount: canceling.totalAmount,
@@ -866,6 +886,13 @@ export class VendorService implements IVendorService {
       }
 
       if (canceling) {
+        const vendor: UserDoc | null = await User.findById(canceling.vendorId);
+        const user: UserDoc | null = await User.findById(canceling.userId);
+
+        const title = "Approved Cancel booking request";
+        const body = `${vendor?.First_name} approved cancel request`;
+        const pic = user?.Avatar;
+        sendNotification(user?.fcmToken as string, title, body, pic as string);
         return {
           success: true,
           message: "cancel confirmed",
@@ -908,5 +935,4 @@ export class VendorService implements IVendorService {
       };
     }
   }
-  
 }

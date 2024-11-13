@@ -6,14 +6,20 @@ import { BookingRepository } from "../repositories/bookingRepository";
 import { HostelRepository } from "../repositories/hostelRepository";
 import { verifyToken } from "../utils/jwt";
 import { Wallet } from "../models/walletModel";
+import User from "../models/userModel";
+import { sendNotification } from "../utils/pushNotification";
+import { UserDoc } from "../interfaces/IUser";
 
 export class BookingService implements IBookingService {
   constructor(
     private _bookingRepository: BookingRepository,
     private _hostelRepository: HostelRepository
-  ) { }
+  ) {}
 
-  async createOrder(orderData: Record<string, unknown>,token:string): Promise<IResponse> {
+  async createOrder(
+    orderData: Record<string, unknown>,
+    token: string
+  ): Promise<IResponse> {
     try {
       const hostel = await this._hostelRepository.findById(
         orderData.hostelId as string
@@ -37,34 +43,34 @@ export class BookingService implements IBookingService {
         }
       });
 
-
       const payload = verifyToken(token);
 
       const id = JSON.parse(JSON.stringify(payload)).payload;
-      
-         //cheking booking is expired or alreay booking is pending or not
-         const previousBooking = await this._bookingRepository.findAll(
-          { userId: id._id },
-          0,
-          0
+
+      //cheking booking is expired or alreay booking is pending or not
+      const previousBooking = await this._bookingRepository.findAll(
+        { userId: id._id },
+        0,
+        0
       );
-      
-        if (previousBooking && previousBooking.length > 0) {
-          // Check if any booking matches the conditions
-          const alreadyBooked = previousBooking.some((booking) => {
-            return (
-              (booking.hostelId === orderData.hostelId || booking.checkInDate >= new Date()) &&
-              booking.isCancelled === false
-            );
-          });
-    
-          if (alreadyBooked) {
-            return {
-              success: false,
-              message: "You have already booked a hostel",
-            };
-          }
+
+      if (previousBooking && previousBooking.length > 0) {
+        // Check if any booking matches the conditions
+        const alreadyBooked = previousBooking.some((booking) => {
+          return (
+            (booking.hostelId === orderData.hostelId ||
+              booking.checkInDate >= new Date()) &&
+            booking.isCancelled === false
+          );
+        });
+
+        if (alreadyBooked) {
+          return {
+            success: false,
+            message: "You have already booked a hostel",
+          };
         }
+      }
 
       const instance = new Razorpay({
         key_id: process.env.RazorPay_id!,
@@ -113,7 +119,58 @@ export class BookingService implements IBookingService {
         };
       }
 
-   
+      //cheking booking is expired or alreay booking is pending or not
+      const previousBooking = await this._bookingRepository.findAll(
+        { userId: orderData.userId },
+        0,
+        0
+      );
+
+      if (previousBooking && previousBooking.length > 0) {
+        // Check if any booking matches the conditions
+        const alreadyBooked = previousBooking.some((booking) => {
+          return (
+            (booking.hostelId === orderData.hostelId ||
+              booking.checkInDate >= new Date()) &&
+            booking.isCancelled === false
+          );
+        });
+
+        if (alreadyBooked) {
+          const userWallet = await Wallet.findOne({ userId: orderData.userId });
+          if (!userWallet) {
+            await Wallet.create({
+              userId: orderData.userId,
+              WalletBalance: orderData.totalAmount,
+              transaction: [
+                {
+                  type: "credit",
+                  description: `hostel puchase failed `,
+                  from: orderData.vendorId,
+                  amount: orderData.totalAmount,
+                },
+              ],
+            });
+          } else {
+            userWallet.WalletBalance += orderData.totalAmount;
+            userWallet.transaction.push({
+              type: "credit",
+              description: `hostel puchased `,
+              from: orderData.userId,
+              amount: orderData.totalAmount,
+            });
+            await userWallet.save();
+          }
+
+          return {
+            success: false,
+            message: "You have already booked a hostel",
+          };
+        }
+      }
+
+      console.log('data from the order',orderData);
+      
 
       const hostelItem = {
         _id: orderData.hostelId,
@@ -133,88 +190,48 @@ export class BookingService implements IBookingService {
       if (!updateHostel) {
         return {
           success: false,
-          message: "faliled save booking",
+          message: "failed to reduce hostel booking",
         };
       }
 
-
-           //cheking booking is expired or alreay booking is pending or not
-           const previousBooking = await this._bookingRepository.findAll(
-            { userId: orderData.userId },
-            0,
-            0
-        );
-        
-          if (previousBooking && previousBooking.length > 0) {
-            // Check if any booking matches the conditions
-            const alreadyBooked = previousBooking.some((booking) => {
-              return (
-                (booking.hostelId === orderData.hostelId || booking.checkInDate >= new Date()) &&
-                booking.isCancelled === false
-              );
-            });
-      
-            if (alreadyBooked) {
-
-              const userWallet = await Wallet.findOne({ userId: orderData.userId })
-              if (!userWallet) {
-                await Wallet.create({
-                  userId: orderData.userId,
-                  WalletBalance: orderData.totalAmount,
-                  transaction: [{
-                    type: 'credit',
-                    description: `hostel puchase failed `,
-                    from: orderData.vendorId,
-                    amount: orderData.totalAmount,
-                  }],
-                })
-              } else {
-                userWallet.WalletBalance += orderData.totalAmount
-                userWallet.transaction.push(
-                  {
-                    type: 'credit',
-                    description: `hostel puchased `,
-                    from: orderData.userId,
-                    amount: orderData.totalAmount,
-                  }
-                )
-                await userWallet.save()
-              }
-             
-              return {
-                success: false,
-                message: "You have already booked a hostel",
-              };
-            }
-          }
-
       const savebooking = await this._bookingRepository.create(orderData);
 
-      const vendorWallet = await Wallet.findOne({ userId: orderData.vendorId })
-      
+      const vendorWallet = await Wallet.findOne({ userId: orderData.vendorId });
+
       if (!vendorWallet) {
         await Wallet.create({
           userId: orderData.vendorId,
           WalletBalance: orderData.totalAmount,
-          transaction: [{
-            type: 'credit',
-            description: `hostel puchased `,
-            from: orderData.userId,
-            amount: orderData.totalAmount,
-          }],
-        })
+          transaction: [
+            {
+              type: "credit",
+              description: `hostel puchased `,
+              from: orderData.userId,
+              amount: orderData.totalAmount,
+            },
+          ],
+        });
       } else {
-        vendorWallet.WalletBalance += orderData.totalAmount
-        vendorWallet.transaction.push(
-          {
-            type: 'credit',
-            description: `hostel puchased `,
-            from: orderData.userId,
-            amount: orderData.totalAmount,
-          }
-        )
-        await vendorWallet.save()
+        vendorWallet.WalletBalance += orderData.totalAmount;
+        vendorWallet.transaction.push({
+          type: "credit",
+          description: `hostel puchased `,
+          from: orderData.userId,
+          amount: orderData.totalAmount,
+        });
+        await vendorWallet.save();
       }
+
+
+      //send user booked the hostel
+      const vendor: UserDoc | null = await User.findById(orderData.vendorId)
+      const user: UserDoc | null = await User.findById(orderData.userId)
+      
+      
+      const title = 'New booking placed'
+      const body = `${user?.First_name} have booked your hostel`
+      const pic=user?.Avatar
+      sendNotification(vendor?.fcmToken as string,title,body,pic as string)
 
       return {
         success: true,
@@ -242,9 +259,6 @@ export class BookingService implements IBookingService {
         { userId: id._id },
         skip
       );
-
-      console.log("id from the get all bookings", bookings);
-
       return {
         success: true,
         message: "Bookings Available",
@@ -261,13 +275,22 @@ export class BookingService implements IBookingService {
 
   async cancelBooking(reason: string, id: string) {
     try {
-      console.log("Reason", reason);
+      
 
       const filter = { $set: { cancelReason: reason, isCancelled: true } };
 
       const cancelling = await this._bookingRepository.update(id, filter);
+      const vendor: UserDoc | null = await User.findById(cancelling?.vendorId)
+      const user: UserDoc | null = await User.findById(cancelling?.userId)
+      
+ 
+      const title = 'Cancell booking request'
+      const body = `${user?.First_name} send a cancel request`
+      const pic=user?.Avatar
+      sendNotification(vendor?.fcmToken as string,title,body,pic as string)
 
       if (cancelling) {
+      
         return {
           success: true,
           message: "cancelling offer Pending",

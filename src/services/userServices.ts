@@ -39,10 +39,12 @@ export class UserService implements IUserSrvice{
       };
     }
 
+    console.log('userform from the user singnup',user);
+    
     const salt = bcrypt.genSaltSync(10);
     const Password: string = user.Password;
 
-    if (!user.First_name || user.First_name.length <= 5) {
+    if (!user.First_name || user.First_name.length < 5) {
       return {
         success: false,
         message: "First name must be sharacters and constains 5 letters",
@@ -100,6 +102,7 @@ export class UserService implements IUserSrvice{
 
     await this._otpRepository.create(newOtpData);
 
+   
     return {
       success: true,
       message: "User created successfully",
@@ -172,7 +175,7 @@ export class UserService implements IUserSrvice{
     }
   }
 
-  async singleSignIn(idToken: string) {
+  async singleSignIn(idToken: string,fcmToken:string) {
     try {
       const ticket = await client.verifyIdToken({
         idToken,
@@ -196,7 +199,7 @@ export class UserService implements IUserSrvice{
         } else if (existingEmail) {
           const token = generateToken(existingEmail);
           const refreshToken = generateRefreshToken(existingEmail);
-
+          await this._userRepository.update(existingEmail._id,{$set:{fcmToken:fcmToken}})
           return {
             success: true,
             message: "Login Successful",
@@ -213,6 +216,7 @@ export class UserService implements IUserSrvice{
           Last_name: family_name,
           isVerified: true,
           Role: Role.User,
+          fcmToken
         });
 
         await newUser.save();
@@ -310,6 +314,10 @@ export class UserService implements IUserSrvice{
 
       const token = generateToken(userExist);
       const refreshToken = generateRefreshToken(userExist);
+
+
+      await this._userRepository.update(userExist._id,{fcmToken:user.fcmToken})
+      
       return {
         success: true,
         message: "Login Successful",
