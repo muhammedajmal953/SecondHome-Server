@@ -9,7 +9,8 @@ export const Admin_Routes = {
   REFRESH_TOKEN: "/token/:refreshToken",
   BLOCK_HOSTEL: "/blockHostel",
   UNBLOCK_HOSTEL: "/unBlockHostel",
-  GET_ALL_BOOKINGS:"/getAllBookings/:page"
+  GET_ALL_BOOKINGS: "/getAllBookings/:page",
+  GET_ALL_DATAS:"/admin-dashboard"
 };
 
 export const USER_ROUTES = {
@@ -33,7 +34,8 @@ export const USER_ROUTES = {
   SAVE_BOOKING: '/save-booking',
   GET_BOOKINGS: '/get-bookings/:page',
   CANCEL_BOOKING: '/cancel-booking', 
-   WALLET_BALANCE:'/wallet-balance'
+  WALLET_BALANCE: '/wallet-balance',
+  BOOKING_DETAILS:'/bookingDetails/:id'
 }; 
 
 export const VENDER_ROUTES = {

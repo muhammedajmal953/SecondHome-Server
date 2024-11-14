@@ -231,4 +231,15 @@ export class AdminController {
       return res.status(Status.INTERNAL_SERVER_ERROR).json({ message:'Internal Server Error'})
     }
   }
+
+  async getAllDatas(req: Request, res: Response) {
+    try {
+      const result = await this._adminService.getAllDatas()
+      
+      return res.status(Status.OK).json(result)
+    } catch (error) {
+        console.log('Error adminController.getAllbooking', error)
+      return res.status(Status.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' })
+    }
+  }
 }

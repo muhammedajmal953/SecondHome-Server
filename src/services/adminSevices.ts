@@ -257,5 +257,25 @@ export class AdminServices implements IAdminService{
             }
         }
     }
+
+    async getAllDatas() {
+        try {
+            const users = await this._userRepository.getAllUsers()
+            const hostels = await this._hotelRepository.getallHostel()
+            const bookings = await this._bookingRepository.getAllBooking()
+            
+            return {
+                success: true,
+                message: 'datas fetched',
+                data:{users,hostels,bookings}
+            }
+        } catch (error) {
+            console.log('Error from getAll datas admin services', error) 
+            return {
+                success: false,
+                message:'Fetching bookings failed'
+            }
+        }
+    }
     
 }

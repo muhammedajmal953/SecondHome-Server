@@ -17,6 +17,10 @@ class UserRepository extends BaseRepository<UserDoc> implements IUserRepository{
             throw new Error("Could not fetch user by email");
         }
     }
+
+   async getAllUsers() {
+        return User.find()
+    }
     
 }
 

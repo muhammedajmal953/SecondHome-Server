@@ -104,4 +104,20 @@ export class BookingController {
             res.status(Status.INTERNAL_SERVER_ERROR).json('internal server error')
         }
     } 
+
+    async getBooking(req: Request, res: Response) {
+        try {
+            const { id } = req.params
+            
+            const result = await this._bookingService.getBookingWithHostel(id)
+            
+            if (!result || !result.success) {
+               return res.status(Status.NOT_FOUND).json(result)
+            }
+            return res.status(Status.OK).json(result)
+        } catch (error) {
+            console.log('Error from the get Hostel booking Controller',error);
+            res.status(Status.INTERNAL_SERVER_ERROR).json('internal server error')
+        }
+    }
 }   

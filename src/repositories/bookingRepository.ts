@@ -3,6 +3,8 @@ import { IOrder } from "../interfaces/IOrders";
 import { IBookingRepository } from "../interfaces/IRepositories";
 import { Booking } from "../models/bookingModels";
 import { BaseRepository } from "./baseRepository";
+import Hostel from "../models/hostelModel";
+
 
 export class BookingRepository
   extends BaseRepository<IOrder>
@@ -12,9 +14,24 @@ export class BookingRepository
     super(Booking);
   }
 
-  async getOrderWithAllDetails(id: string): Promise<IOrder | null> {
-    console.log(id);
-    return null;
+  async getOrderWithAllDetails(id: string): Promise<any> {
+    return await Booking.aggregate(
+      [
+        { $match: { _id:new mongoose.Types.ObjectId(id) } },
+        {
+          $lookup: {
+            from: "hostels",
+            localField: "hostelId",
+            foreignField: "_id",
+            as: "hostelDetails",
+          }  
+        }, 
+          { $unwind: "$hostelDetails" }
+        
+      ]
+    )
+    
+    
   }
 
   async getAllBookingsWithHostels(
@@ -42,7 +59,7 @@ export class BookingRepository
           { $limit: 5 },
         ]).exec();
       }
-      console.log("vendorID", filter.vendorId);
+     
       return Booking.aggregate([
         { $match: { vendorId: filter.vendorId } },
         {
@@ -99,6 +116,7 @@ export class BookingRepository
             numberOfGuests: 1,
             isActive: 1,
             isCancelled: 1,
+            bookedAt:1
           },
         },
         {
@@ -112,4 +130,9 @@ export class BookingRepository
       console.log(error);
     }
   }
+
+ async getAllBooking() {
+    return await Booking.find()
+  }
+
 }

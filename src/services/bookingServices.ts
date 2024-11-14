@@ -300,4 +300,31 @@ export class BookingService implements IBookingService {
       console.log(error);
     }
   }
+
+  async getBookingWithHostel(id: string) {
+    try {
+      const booking = await this._bookingRepository.getOrderWithAllDetails(id)
+      
+      if (!booking) {
+        return {
+          success: false,
+          meessage:'booking not found'
+        }
+      }
+
+      console.log('booking details id',booking);
+      
+      return {
+        success: true,
+        message: 'booking fetched successfully',
+        data:booking
+      }
+    } catch (error) {
+      console.log('Error from getbookingwith hostel',error);
+      return {
+        success: false,
+        message:'booking fetching faliled'
+      }
+    }
+  }
 }
