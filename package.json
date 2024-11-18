@@ -6,6 +6,7 @@
     "@types/aws-sdk": "^0.0.42",
     "@types/google-one-tap": "^1.2.6",
     "aws-sdk": "^2.1691.0",
+    "axios": "^1.7.7",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "cron": "^3.1.7",

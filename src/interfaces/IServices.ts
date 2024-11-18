@@ -18,7 +18,7 @@ export interface IUserSrvice {
   verifyUser(otp: string, email: string): Promise<IResponse>;
   singleSignIn(idToken: string,fcmToken:string): Promise<IResponse>;
   loginUser(user: { [key: string]: unknown }): Promise<IResponse>;
-  forgotPassword(email: string): Promise<IResponse>;
+  forgotPassword(email: string): Promise<IResponse>; 
   forgotOtpHandle(email: string, otp: string): Promise<IResponse>;
   changePassword(
     email: string,

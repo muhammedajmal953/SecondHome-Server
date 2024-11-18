@@ -1,7 +1,6 @@
-import { S3Client,GetObjectCommand } from "@aws-sdk/client-s3";
-import {Upload} from "@aws-sdk/lib-storage";
+import { S3Client,GetObjectCommand, PutObjectCommand, } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-
+import axios from "axios";
 
 
 const s3Client = new S3Client({
@@ -20,30 +19,23 @@ export const uploadToS3 = async (
     fileBuffer: Buffer,
     mimetype: string
 ) => {
-    const parallelUploadOptions = {
-        queueSize: 4,
-        partSize: 10 * 1024 * 1024,
-    };
-
-   
-    
-
-    const uploadParams = {
-        Bucket: bucketName,
-        Key: key,
-        Body: fileBuffer,
-        ContentType: mimetype,
-    };
-
     try {
-        const upload = new Upload({
-            client: s3Client,
-            params: uploadParams,
-            queueSize: parallelUploadOptions.queueSize,
-            partSize: parallelUploadOptions.partSize,
-        });
+    //     const upload = new Upload({
+    //         client: s3Client,
+    //         params: uploadParams,
+    //         queueSize: parallelUploadOptions.queueSize,
+    //         partSize: parallelUploadOptions.partSize,
+    //     });
 
-       await upload.done();
+    //     const putPreSingned = new PutObjectCommand({ Bucket: bucketName, Key: key })
+        
+    //     getSignedUrl(s3Client,putPreSingned,{expiresIn:60})
+
+        //    await upload.done();
+        
+        const uploadUrl = await uploadUsingPeresignedUrl(bucketName, key)
+        
+        await uploadToS3Predefined(uploadUrl!,fileBuffer,mimetype)
         
         const fileUrl = `https://${bucketName}.s3.amazonaws.com/${key}`;
         return fileUrl
@@ -54,10 +46,37 @@ export const uploadToS3 = async (
 }
 
 export const getPredesignedUrl = (bucketName:string,key:string,expiresIn=3600) => {
+   try {
     const command = new GetObjectCommand({ Bucket: bucketName, Key: key })
     return getSignedUrl(s3Client,command,{expiresIn})
+   } catch (error) {
+    console.log('Error in presigned geturl',error);
+    
+   }
 }
 
+export const uploadUsingPeresignedUrl =async (  bucketName: string, key: string)=>{
+    try {
+        const putPreSingned = new PutObjectCommand({ Bucket: bucketName, Key: key })
+        const signedUrl = await getSignedUrl(s3Client, putPreSingned, { expiresIn:600 });
+        return signedUrl;
+    } catch (error) {
+        console.log(error);
+    }
+}
 
+export const uploadToS3Predefined = async (uploadUrl: string, fileBuffer: Buffer, mimetype: string) => {
+    try {
+        await axios.put(uploadUrl, fileBuffer,
+            {
+                headers: {
+                    'Content-type':mimetype
+                }
+            }
+        )
+    } catch (error) {
+        console.log(error);
+    }
+}
 
   

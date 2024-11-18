@@ -37,7 +37,7 @@ class UserController {
      
      if(!otp||!email) return res.status(Status.BAD_REQUEST).json({message:'Email and OTP required'})
 
-     const registeredUser = await userRepository.getUserByEmail(email);
+     const registeredUser = await userRepository.findByQuery({ Email: email });
      
     
 

@@ -7,6 +7,9 @@ import { isValidEmail, isValidPassword } from "../utils/vadidations";
 import { Role } from "../utils/enums";
 import { IAdminService } from "../interfaces/IServices";
 import { BookingRepository } from "../repositories/bookingRepository";
+import User from "../models/userModel";
+import Hostel from "../models/hostelModel";
+import { Booking } from "../models/bookingModels";
 
 export class AdminServices implements IAdminService{
     constructor(private _userRepository: UserRepository, private _hotelRepository: HostelRepository,private _bookingRepository:BookingRepository) { }
@@ -14,7 +17,7 @@ export class AdminServices implements IAdminService{
 
     async loginUser(admin: Partial<UserDoc>) {
         try { 
-            const adminExist = await this._userRepository.getUserByEmail(admin.Email!);
+            const adminExist = await this._userRepository.findByQuery({Email:admin.Email!});
     
             if (!adminExist) {
                 console.error("admin not found");
@@ -96,7 +99,7 @@ export class AdminServices implements IAdminService{
             ]
         }
        
-        const users = await this._userRepository.findAll(filter, newLimit)
+        const users = await this._userRepository.findAll(filter, newLimit,'')
         return {
             success: true,
             message: "Users fetched successfully",
@@ -113,7 +116,7 @@ export class AdminServices implements IAdminService{
                 {Email:{$regex:name,$options:'i'}},
             ]
         }
-        const users = await this._userRepository.findAll(filter, newLimit)
+        const users = await this._userRepository.findAll(filter, newLimit,'')
         
         return {
             success: true,
@@ -221,7 +224,7 @@ export class AdminServices implements IAdminService{
               { category: { $regex: searchQuery, $options: "i" } },
             ];
           }
-          const hostels = await this._hotelRepository.findAll(filter, skip);
+          const hostels = await this._hotelRepository.findAll(filter, skip,'');
           hostels.sort(
             (a, b) =>
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -260,9 +263,9 @@ export class AdminServices implements IAdminService{
 
     async getAllDatas() {
         try {
-            const users = await this._userRepository.getAllUsers()
-            const hostels = await this._hotelRepository.getallHostel()
-            const bookings = await this._bookingRepository.getAllBooking()
+            const users = await User.find()
+            const hostels = await Hostel.find()
+            const bookings = await Booking.find()
             
             return {
                 success: true,

@@ -30,7 +30,7 @@ export class UserService implements IUserSrvice{
 
   async createUser(user: UserDoc) {
     const email = user.Email;
-    const existingEmail = await this._userRepository.getUserByEmail(email);
+    const existingEmail = await this._userRepository.findByQuery({ Email: email });
     if (existingEmail) {
       return {
         success: false,
@@ -111,7 +111,7 @@ export class UserService implements IUserSrvice{
 
   async verifyUser(otp: string, email: string) {
     try {
-      const otpData = await this._otpRepository.getOtpByEmail(email);
+      const otpData = await this._otpRepository.findByQuery({ Email: email });
       if (!otpData) {
         console.log("otp not found");
         return {
@@ -138,7 +138,7 @@ export class UserService implements IUserSrvice{
         };
       }
 
-      const user = await this._userRepository.getUserByEmail(email);
+      const user = await this._userRepository.findByQuery({ Email: email });
 
       if (!user) {
         console.log("user not found");
@@ -155,7 +155,7 @@ export class UserService implements IUserSrvice{
       const token = generateToken(user);
       const refreshToken = generateRefreshToken(user);
 
-      const existingOtp = await this._otpRepository.getOtpByEmail(email);
+      const existingOtp = await this._otpRepository.findByQuery({ Email: email });
 
       await this._otpRepository.update(existingOtp?._id as string, { Otp: "" });
       return {
@@ -188,9 +188,15 @@ export class UserService implements IUserSrvice{
       if (payload) {
         const { email, given_name, family_name } = payload;
 
-        const existingEmail = await this._userRepository.getUserByEmail(email!);
+        const existingEmail = await this._userRepository.findByQuery({ Email: email }!);
 
         if (existingEmail && existingEmail.Password) {
+          return {
+            success: false,
+            message: "Email is also used",
+            data: null,
+          };
+        } else if (existingEmail && existingEmail?.Role!=='User') {
           return {
             success: false,
             message: "Email is also used",
@@ -247,8 +253,8 @@ export class UserService implements IUserSrvice{
 
   async loginUser(user: { [key: string]: unknown }) {
     try {
-      const userExist = await this._userRepository.getUserByEmail(
-        user.Email as string
+      const userExist = await this._userRepository.findByQuery(
+       { Email:user.Email as string}
       );
 
       if (!userExist) {
@@ -315,13 +321,14 @@ export class UserService implements IUserSrvice{
       const token = generateToken(userExist);
       const refreshToken = generateRefreshToken(userExist);
 
-
-      await this._userRepository.update(userExist._id,{fcmToken:user.fcmToken})
+      console.log('user fcm Token',user.fcmToken);
       
-      return {
+      await this._userRepository.update(userExist._id,{$set:{fcmToken:user.fcmToken}})
+      
+      return { 
         success: true,
         message: "Login Successful",
-        data: {
+        data: { 
           token,
           refreshToken,
         },
@@ -339,7 +346,7 @@ export class UserService implements IUserSrvice{
     try {
       console.log("before user service");
 
-      const user = await this._userRepository.getUserByEmail(email);
+      const user = await this._userRepository.findByQuery({ Email: email });
       console.log("email at forgot service", email);
 
       if (!user) {
@@ -356,7 +363,7 @@ export class UserService implements IUserSrvice{
         Otp: newOtp,
         ExpiresAt: new Date(Date.now() + 600000),
       };
-      const existingOtp = await this._otpRepository.getOtpByEmail(email);
+      const existingOtp = await this._otpRepository.findByQuery({ Email: email });
 
       await this._otpRepository.update(existingOtp?._id as string, otpData);
 
@@ -379,7 +386,7 @@ export class UserService implements IUserSrvice{
 
   async forgotOtpHandle(email: string, otp: string) {
     try {
-      const otpData = await this._otpRepository.getOtpByEmail(email);
+      const otpData = await this._otpRepository.findByQuery({ Email: email });
       if (!otpData) {
         console.log("otp not found");
         return {
@@ -435,7 +442,7 @@ export class UserService implements IUserSrvice{
       }
 
       const hashedPassword = bcrypt.hashSync(password.newPassword, salt);
-      const userExist = await this._userRepository.getUserByEmail(email);
+      const userExist = await this._userRepository.findByQuery({ Email: email });
 
       if (!userExist) {
         return {
@@ -480,7 +487,7 @@ export class UserService implements IUserSrvice{
 
         if (user?.Avatar) {
           const key = user.Avatar.split(`.s3.amazonaws.com/`)[1]
-            user.Avatar=await getPredesignedUrl(process.env.AWS_S3_BUCKET_NAME!,key)
+            user.Avatar=await getPredesignedUrl(process.env.AWS_S3_BUCKET_NAME!,key)!
         }
       
       return {
@@ -663,7 +670,7 @@ export class UserService implements IUserSrvice{
 
   async resendOtp(email: string) {
     try {
-      const registeredUser = await this._userRepository.getUserByEmail(email);
+      const registeredUser = await this._userRepository.findByQuery({ Email: email });
 
       if (!registeredUser) {
         return { success: false, message: "No user Found" };
@@ -678,7 +685,7 @@ export class UserService implements IUserSrvice{
         Otp: otp,
         ExpiresAt: new Date(Date.now() + 600000), // Expires in 10 minutes
       };
-      const existingOtp = await this._otpRepository.getOtpByEmail(email);
+      const existingOtp = await this._otpRepository.findByQuery({ Email: email });
 
       await this._otpRepository.update(existingOtp?._id as string, otpData);
       return {

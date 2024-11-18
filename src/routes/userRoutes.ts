@@ -57,7 +57,7 @@ userRouter.get(USER_ROUTES.GET_USER,userAuth, userController.getUser.bind(userCo
 
 userRouter.put(USER_ROUTES.EDIT_PROFILE,userAuth, upload.single('avatar'), userController.editProfile.bind(userController))
 
-userRouter.get(USER_ROUTES.GET_ALL_HOSTEL,userAuth,hostelController.getAllHostel.bind(hostelController))
+userRouter.post(USER_ROUTES.GET_ALL_HOSTEL,userAuth,hostelController.getAllHostel.bind(hostelController))
 
 userRouter.put(USER_ROUTES.CHANGE_PASSWORD_NEW, userAuth, userController.newPassword.bind(userController))
 

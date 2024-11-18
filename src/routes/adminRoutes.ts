@@ -26,6 +26,7 @@ adminRouter.post(
 
 adminRouter.get(
   Admin_Routes.Get_All_Users,
+  adminAuth,
   adminController.getAllUsers.bind(adminController)
 );
 
@@ -43,6 +44,7 @@ adminRouter.put(
 
 adminRouter.get(
   Admin_Routes.GET_ALL_VENDORS,
+  adminAuth,
   adminController.getAllVendors.bind(adminController)
 );
 

@@ -3,7 +3,7 @@ import { IOrder } from "../interfaces/IOrders";
 import { IBookingRepository } from "../interfaces/IRepositories";
 import { Booking } from "../models/bookingModels";
 import { BaseRepository } from "./baseRepository";
-import Hostel from "../models/hostelModel";
+
 
 
 export class BookingRepository
@@ -14,7 +14,11 @@ export class BookingRepository
     super(Booking);
   }
 
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getOrderWithAllDetails(id: string): Promise<any> {
+    console.log('repository',id);
+    
     return await Booking.aggregate(
       [
         { $match: { _id:new mongoose.Types.ObjectId(id) } },
@@ -131,8 +135,6 @@ export class BookingRepository
     }
   }
 
- async getAllBooking() {
-    return await Booking.find()
-  }
 
 }
+ 

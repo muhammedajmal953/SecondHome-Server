@@ -10,6 +10,8 @@ import { HostelController } from '../controllers/hostelController';
 import { vendorAuth } from '../middlewares/vendorAuthMiddleWare';
 import { VENDER_ROUTES } from '../constants/routes-constants';
 import { BookingRepository } from '../repositories/bookingRepository';
+import { BookingService } from '../services/bookingServices';
+import { BookingController } from '../controllers/bookingController';
 
 const venderRouter = Router();
 const otpRepository = new OtpRepository();
@@ -20,7 +22,10 @@ const bookingRepository=new BookingRepository
 const venderService = new VendorService(userRepository,otpRepository,hostelRepository,bookingRepository);
 const vendorController = new VendorController(venderService);
 const hostelService = new HostelService(hostelRepository);
-const hostelController = new HostelController(hostelService);   
+const hostelController = new HostelController(hostelService);  
+
+const bookingService = new BookingService(bookingRepository, hostelRepository)
+const bookingController=new BookingController(bookingService)
 
 
 venderRouter.post(VENDER_ROUTES.SIGN_UP, vendorController.createVendor.bind(vendorController))
@@ -59,6 +64,9 @@ venderRouter.get(VENDER_ROUTES.SHOW_BOOKINGS, vendorAuth, vendorController.getAl
 
 venderRouter.put(VENDER_ROUTES.CONFIRM_CANCEL,vendorAuth,vendorController.conformCancel.bind(vendorController))
  
-venderRouter.get(VENDER_ROUTES.WALLET_BALANCE, vendorAuth,vendorController.walletBalance.bind(vendorController))
+venderRouter.get(VENDER_ROUTES.WALLET_BALANCE, vendorAuth, vendorController.walletBalance.bind(vendorController))
 
-export default venderRouter;
+venderRouter.get(VENDER_ROUTES.BOOKING_DETAILS,vendorAuth,bookingController.getBooking.bind(bookingController))
+
+
+export default venderRouter; 

@@ -33,7 +33,7 @@ class VendorController {
 
   async verifyVendor(req: Request, res: Response) {
     const { otp, email } = req.body;
-    const registeredUser = await userRepository.getUserByEmail(email);
+    const registeredUser = await userRepository.findByQuery({ Email: email });
 
     console.log("otp and email", otp, email);
 

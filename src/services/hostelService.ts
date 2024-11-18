@@ -53,6 +53,8 @@ export class HostelService implements IHostelService {
       district: hostelData.district,
       state: hostelData.state,
       pincode: hostelData.pincode,
+      latitude: hostelData.latitude,
+      longtitude: hostelData.longtitude
     };
 
     if (typeof hostelData.nearByPlaces === "string") {
@@ -78,11 +80,12 @@ export class HostelService implements IHostelService {
     };
   }
 
-  async getAllHostel(page: number, searchQuery: string): Promise<IResponse> {
+  async getAllHostel(page: number, searchQuery: string,filterObject:Record<string,unknown>,sort:string): Promise<IResponse> {
     try {
       const skip = (page - 1) * 5;
 
       const filter: { [key: string]: unknown } = {};
+      let query:Record<string,unknown> = {}
 
       if (searchQuery) {
         filter["$or"] = [
@@ -91,18 +94,47 @@ export class HostelService implements IHostelService {
         ];
       }
 
-      filter.isActive = true;
-      const hostels = await this._hostelRepository.findAll(filter, skip);
-      hostels.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
+      if (Object.entries(filterObject).length) {
+        if (Object.entries(filterObject)[0][1]) {
+          filter['rates']={$elemMatch:{type:filterObject.bedtype}}
+        }
+        if (Object.entries(filterObject)[1][1]) {
+          filter['category']=filterObject.category
+        }
+      }
+      if (sort) {
+        switch (sort) {
+          case 'low':
+            query['rates.0.price'] = 1
+            break
+          case 'high':
+            query['rates.0.price'] = -1
+            break
+          case 'newly Added':
+            query = {createdAt:-1}
+            break
+            case 'AtoZ':
+              query['name'] =1
+            break
+          case 'ZtoA':
+              query['name'] =-1
+              break
+          default:
+          console.warn(`Unknown sort option: ${sort}`);
+        }
+      }
+   
 
+      console.log('final object',filterObject);
+      
+
+      filter.isActive = true;
+      const hostels = await this._hostelRepository.findAll(filter, skip,query);
       for (const hostel of hostels) {
         if (hostel.photos && hostel.photos.length > 0) {
           hostel.photos = await Promise.all(hostel.photos.map(async (url: string) => {
             const key = url.split(`.s3.amazonaws.com/`)[1]
-            return getPredesignedUrl(process.env.AWS_S3_BUCKET_NAME!,key)
+            return getPredesignedUrl(process.env.AWS_S3_BUCKET_NAME!,key)!
           }))
         }
       }
@@ -113,7 +145,7 @@ export class HostelService implements IHostelService {
         data: hostels,
       };
     } catch (error) {
-      console.log(error);
+      console.log('error get all hostel servise',error);
       return {
         success: false,
         message: "No Hostels Found",
@@ -208,7 +240,7 @@ export class HostelService implements IHostelService {
         if (hostel.photos && hostel.photos.length > 0) {
           hostel.photos = await Promise.all(hostel.photos.map(async (url: string) => {
             const key = url.split(`.s3.amazonaws.com/`)[1]
-            return getPredesignedUrl(process.env.AWS_S3_BUCKET_NAME!,key)
+            return getPredesignedUrl(process.env.AWS_S3_BUCKET_NAME!,key)!
           }))
         }
 
@@ -232,10 +264,29 @@ export class HostelService implements IHostelService {
     formdata: { [key: string]: unknown }
   ): Promise<IResponse> {
     try {
-      const uploadedStrings: string[] = formdata.existingPhotos as string[];
+      let uploadedStrings: string[] = (formdata.existingPhotos as string).split(',') as string[];
+
+      console.log('existing photos',photos.length);
+      
+
+      // if (true) {
+      //   console.log(formdata);
+      //   return {
+      //     success: false,
+      //     message:''
+      //   }
+      // }
+      
+
       if (photos) {  
         for (const file of photos) {
+          console.log('inside the edit hostel file');
+          
+          
           if (file) {
+
+            console.log('upload edit hostel',file);
+            
             const bucketName = process.env.AWS_S3_BUCKET_NAME!;
             const key = `upload/${Date.now()}-${file.originalname}`;
             const fileBuffer = file.buffer;
@@ -246,13 +297,31 @@ export class HostelService implements IHostelService {
               fileBuffer,
               mimetype
             );
-            uploadedStrings.push(imageUrl);
+
+           if(!imageUrl)console.log('not image url');
+           
+              const fileUrl = `https://${bucketName}.s3.amazonaws.com/${key}`
+            uploadedStrings.push(fileUrl);
           }
         }
       }
-      formdata.photos = uploadedStrings;
 
-      const { rates, ...hostelData } = formdata;
+    uploadedStrings=  uploadedStrings.filter((string) => {
+      return string.includes('https://secondhome.s3.amazonaws.com/upload/')
+     })
+
+      formdata.photos = uploadedStrings;
+      if (typeof formdata.nearbyPlaces === 'string') {
+        
+        formdata.nearbyPlaces=(formdata.nearbyPlaces as string).split(',')
+      }
+      if (typeof formdata.facilities === 'string') {
+        
+      
+        formdata.facilities=(formdata.facilities as string).split(',')
+      }
+
+      const { rates,...hostelData } = formdata;
 
       if (rates && typeof rates === "object") {
         hostelData.rates = Object.entries(rates).map(([type, details]) => ({
@@ -262,14 +331,13 @@ export class HostelService implements IHostelService {
         }));
       }
 
-      if (typeof hostelData.nearByPlaces === "string") {
-        hostelData.nearbyPlaces = hostelData.nearByPlaces;
-      }
+    
+      
 
-      console.log('hostel datas');
+
       
       const editedHostel = await this._hostelRepository.update(id, hostelData);
-      console.log('edited  hostel');
+   
       
 
       if (!editedHostel) {

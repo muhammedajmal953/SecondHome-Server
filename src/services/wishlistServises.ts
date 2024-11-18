@@ -8,7 +8,7 @@ export class WishlistServices implements IWishlistService{
     constructor(private _wislistRepository: WishlistRepository,private _hostelRepository:HostelRepository) { }
    async addToWish(id: string,hostelId:string): Promise<IResponse> {
         try {
-            const existingWishlist = await this._wislistRepository.getWishlistByUserId(id)
+            const existingWishlist = await this._wislistRepository.findByQuery({userId:id})
             
             if (existingWishlist) {
 
@@ -56,7 +56,7 @@ export class WishlistServices implements IWishlistService{
 
     async getAllWishList(page: number, id: string): Promise<IResponse> {
         try {
-            const wishlist = await this._wislistRepository.getWishlistByUserId(id)
+            const wishlist = await this._wislistRepository.findByQuery({userId:id})
             
             if (!wishlist) {
                 return {
@@ -68,7 +68,7 @@ export class WishlistServices implements IWishlistService{
             const hostelIds = wishlist.hostels.sort((a,b)=>b.createdAt.getTime()-a.createdAt.getTime()).map(hostel=>hostel.hostelId)
             
             const skip=(page-1)*5
-            const hostels =await this._hostelRepository.findAll({ _id: { $in: hostelIds } }, skip)
+            const hostels =await this._hostelRepository.findAll({ _id: { $in: hostelIds } }, skip,'')
             return {
                 success: true,
                 message: 'Wishlisted Hostels',
@@ -85,7 +85,9 @@ export class WishlistServices implements IWishlistService{
     }
     async removeFromWishList(id: string,hostelId:string): Promise<IResponse> {
         try {
-            const remove = await this._wislistRepository.removeFromWishList(id, hostelId) 
+
+            const wishlist = await this._wislistRepository.findByQuery({userId:id})
+            const remove = await this._wislistRepository.update(wishlist?._id,{$pull:{hostels:{hostelId}}}) 
             if (!remove) {
                 return {
                     success: false,

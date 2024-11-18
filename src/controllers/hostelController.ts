@@ -6,7 +6,6 @@ import { Status } from "../utils/enums";
 
 export class HostelController {
    
-
   constructor( private _hostelService: HostelService) {
     this._hostelService = _hostelService;
   }
@@ -24,9 +23,9 @@ export class HostelController {
         })
       }
 
+      
       const token = bearer.split(" ")[1];
       const formdata = req.body;
-
       if (!formdata) {
         return res.status(Status.BAD_REQUEST).json({
           success: false,
@@ -44,15 +43,12 @@ export class HostelController {
           sucess: false,
           message: "internal server error",
         });
-      }
+      } 
 
-      
       if (!result?.success) {
         console.error(result?.message)
         return res.status(Status.BAD_REQUEST).json(result)
       }
-
-      
 
       return res.status(Status.CREATED).json(result);
     } catch (error) {
@@ -67,11 +63,16 @@ export class HostelController {
 
   async getAllHostel(req: Request, res: Response) {
     try {
-      const { searchQuery } = req.query;
+    
+      const { searchQuery, } = req.query;
+      const{filter,sort}=req.body
+      
       const { page } = req.params;
       const result= await this._hostelService.getAllHostel(
         Number(page),
-        searchQuery as string
+        searchQuery as string,
+        filter as Record<string,unknown>,
+        sort as string
       );
       return res.status(Status.OK).json(result);
     } catch (error) {
@@ -189,16 +190,12 @@ export class HostelController {
   }
 
   async editHostel(req: Request, res: Response) {
-    try {
-      console.log('enter user');
-      
+    try { 
       const { id } = req.params
-      
-      console.log(id);
+      console.log('photos from req.files hostel edit',req.files);
       
       const photos = req.files as Express.Multer.File[];
       const formdata = req.body;
-      console.log(formdata);
       
       if (!formdata) {
         return res.status(Status.NOT_FOUND).json({

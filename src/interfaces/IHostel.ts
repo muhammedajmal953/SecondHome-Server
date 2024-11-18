@@ -39,7 +39,9 @@ export interface IHostelService {
     
     getAllHostel(
         page: number,
-        searchQuery:string
+      searchQuery: string,
+      filter: Record<string, unknown>,
+      sort:string
     ): Promise<IResponse>;
 
     blockHostel(id: string): Promise<IResponse>;

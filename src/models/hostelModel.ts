@@ -10,8 +10,8 @@ const HostelModel = new mongoose.Schema<IHostel>({
         district: String,
         state: String,
         pincode: Number,
-        latitude: String,
-        longtitude:String
+        latitude: Number,
+        longtitude:Number
     },
     phone: String,
     email: String,
@@ -48,3 +48,4 @@ const HostelModel = new mongoose.Schema<IHostel>({
 
 const Hostel= mongoose.model<IHostel>("Hostel", HostelModel)
 export default Hostel
+

@@ -57,5 +57,6 @@ export const VENDER_ROUTES = {
   EDIT_HOSTEL: "/editHostel/:id",
   SHOW_BOOKINGS: '/get-bookings/:page',
   CONFIRM_CANCEL: '/confirm-cancel',
-  WALLET_BALANCE:'/wallet-balance'
+  WALLET_BALANCE: '/wallet-balance',
+  BOOKING_DETAILS:'/bookingDetails/:id'
 };

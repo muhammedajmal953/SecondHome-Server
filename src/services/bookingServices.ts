@@ -51,6 +51,7 @@ export class BookingService implements IBookingService {
       const previousBooking = await this._bookingRepository.findAll(
         { userId: id._id },
         0,
+        {},
         0
       );
 
@@ -123,6 +124,7 @@ export class BookingService implements IBookingService {
       const previousBooking = await this._bookingRepository.findAll(
         { userId: orderData.userId },
         0,
+        {},
         0
       );
 
@@ -145,7 +147,7 @@ export class BookingService implements IBookingService {
               transaction: [
                 {
                   type: "credit",
-                  description: `hostel puchase failed `,
+                  description: `hostel puchase failed`,
                   from: orderData.vendorId,
                   amount: orderData.totalAmount,
                 },
@@ -155,7 +157,7 @@ export class BookingService implements IBookingService {
             userWallet.WalletBalance += orderData.totalAmount;
             userWallet.transaction.push({
               type: "credit",
-              description: `hostel puchased `,
+              description: `hostel puchase failed`,
               from: orderData.userId,
               amount: orderData.totalAmount,
             });

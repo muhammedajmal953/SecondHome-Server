@@ -36,7 +36,7 @@ export class VendorService implements IVendorService {
 
   async createVendor(user: UserDoc) {
     const email = user.Email;
-    const existingEmail = await this._userRepository.getUserByEmail(email);
+    const existingEmail = await this._userRepository.findByQuery({Email:email});
     if (existingEmail) {
       return {
         success: false,
@@ -113,7 +113,7 @@ export class VendorService implements IVendorService {
   }
 
   async verifyVendor(otp: string, email: string) {
-    const otpData = await this._otpRepository.getOtpByEmail(email);
+    const otpData = await this._otpRepository.findByQuery({ Email: email });
     if (!otpData) {
       console.log("otp not found");
       return {
@@ -140,7 +140,7 @@ export class VendorService implements IVendorService {
       };
     }
 
-    const user = await this._userRepository.getUserByEmail(email);
+    const user = await this._userRepository.findByQuery({ Email: email });
 
     if (!user) {
       console.log("user not found");
@@ -157,7 +157,7 @@ export class VendorService implements IVendorService {
 
     const token = generateToken(user);
     const refreshToken = generateRefreshToken(user);
-    const existingOtp = await this._otpRepository.getOtpByEmail(email);
+    const existingOtp = await this._otpRepository.findByQuery({ Email: email });
     await this._otpRepository.update(existingOtp?._id as string, { Otp: "" });
     return {
       success: true,
@@ -168,7 +168,7 @@ export class VendorService implements IVendorService {
 
   async singleSignInVendor(idToken: string, fcmToken: string) {
     try {
-      console.log("id token vendor", idToken);
+      console.log("token fcm vendor", fcmToken);
 
       const ticket = await client.verifyIdToken({
         idToken,
@@ -181,7 +181,7 @@ export class VendorService implements IVendorService {
       if (payload) {
         const { email, given_name, family_name } = payload;
 
-        const existingEmail = await this._userRepository.getUserByEmail(email!);
+        const existingEmail = await this._userRepository.findByQuery({ Email: email }!);
 
         if (existingEmail && existingEmail.Password) {
           return {
@@ -189,6 +189,14 @@ export class VendorService implements IVendorService {
             message: "Email is also used",
             data: null,
           };
+          
+        } else if ( existingEmail && existingEmail?.Role!=='Vendor') {
+          return {
+            success: false,
+            message: "Email is also used and not vendor",
+            data: null,
+          };
+          
         } else if (existingEmail) {
           const token = generateToken(existingEmail);
           const refreshToken = generateRefreshToken(existingEmail);
@@ -238,7 +246,7 @@ export class VendorService implements IVendorService {
 
   async loginVendor(user: { [key: string]: string }) {
     try {
-      const userExist = await this._userRepository.getUserByEmail(user.Email);
+      const userExist = await this._userRepository.findByQuery({Email:user.Email});
 
       if (!userExist) {
         console.error("User not found");
@@ -318,8 +326,8 @@ export class VendorService implements IVendorService {
       }
       const token = generateToken(userExist);
       const refreshToken = generateRefreshToken(userExist);
-
-      await this._userRepository.update(userExist._id,{fcmToken:user.fcmToken})
+      console.log('vendor fcm Token',user.fcmToken);
+      await this._userRepository.update(userExist._id, { $set: { fcmToken: user.fcmToken } })
 
       return {
         success: true,
@@ -340,7 +348,7 @@ export class VendorService implements IVendorService {
     try {
       console.log("before user service");
 
-      const user = await this._userRepository.getUserByEmail(email);
+      const user = await this._userRepository.findByQuery({ Email: email });
       console.log("email at forgot service", email);
 
       if (!user) {
@@ -365,7 +373,7 @@ export class VendorService implements IVendorService {
         Otp: newOtp,
         ExpiresAt: new Date(Date.now() + 600000), // Expires in 10 minutes
       };
-      const existingOtp = await this._otpRepository.getOtpByEmail(email);
+      const existingOtp = await this._otpRepository.findByQuery({ Email: email });
       await this._otpRepository.update(existingOtp?._id as string, otpData);
 
       console.log(newOtp, "the forgot password otp");
@@ -401,7 +409,7 @@ export class VendorService implements IVendorService {
 
       const hashedPassword = bcrypt.hashSync(password?.newPassword, salt);
 
-      const userExist = await this._userRepository.getUserByEmail(email);
+      const userExist = await this._userRepository.findByQuery({ Email: email });
 
       if (!userExist) {
         return {
@@ -437,7 +445,7 @@ export class VendorService implements IVendorService {
 
   async forgotOtpHandler(email: string, otp: string) {
     try {
-      const otpData = await this._otpRepository.getOtpByEmail(email);
+      const otpData = await this._otpRepository.findByQuery({ Email: email });
       if (!otpData) {
         console.log("otp not found");
         return {
@@ -509,7 +517,7 @@ export class VendorService implements IVendorService {
         };
       }
 
-      const userExist = await this._userRepository.getUserByEmail(email);
+      const userExist = await this._userRepository.findByQuery({ Email: email });
 
       if (!userExist) {
         return {
@@ -728,7 +736,7 @@ export class VendorService implements IVendorService {
 
   async resendOtp(email: string) {
     try {
-      const registeredUser = await this._userRepository.getUserByEmail(email);
+      const registeredUser = await this._userRepository.findByQuery({ Email: email });
 
       if (!registeredUser) {
         return { success: false, message: "No user Found" };
@@ -743,7 +751,7 @@ export class VendorService implements IVendorService {
         Otp: otp,
         ExpiresAt: new Date(Date.now() + 600000),
       };
-      const existingOtp = await this._otpRepository.getOtpByEmail(email);
+      const existingOtp = await this._otpRepository.findByQuery({ Email: email });
       await this._otpRepository.update(existingOtp?._id as string, otpData);
       return {
         success: true,
@@ -774,7 +782,7 @@ export class VendorService implements IVendorService {
           { category: { $regex: searchQuery, $options: "i" } },
         ];
       }
-      const hostels = await this._hostelRepository.findAll(filter, skip);
+      const hostels = await this._hostelRepository.findAll(filter, skip,'');
 
       return {
         success: true,
@@ -837,7 +845,7 @@ export class VendorService implements IVendorService {
         vendorWallet.WalletBalance -= canceling.totalAmount;
         vendorWallet?.transaction.push({
           type: "debit",
-          description: `amount returened `,
+          description: `amount returened for cancel hostel`,
           from: canceling.vendorId,
           amount: canceling.totalAmount,
         });
@@ -845,11 +853,11 @@ export class VendorService implements IVendorService {
       } else if (canceling) {
         await Wallet.create({
           userId: canceling.vendorId,
-          WalletBalance: canceling.totalAmount,
+          WalletBalance: 0,
           transaction: [
             {
-              type: "credit",
-              description: `hostel puchased `,
+              type: "debit",
+              description: `hostel booking cancelled `,
               from: canceling.vendorId,
               amount: canceling.totalAmount,
             },
@@ -865,7 +873,7 @@ export class VendorService implements IVendorService {
         userWallet.WalletBalance += canceling.totalAmount;
         userWallet?.transaction.push({
           type: "credit",
-          description: `amount returened `,
+          description: `amount returened for booking cancel`,
           from: canceling.vendorId,
           amount: canceling.totalAmount,
         });
@@ -877,7 +885,7 @@ export class VendorService implements IVendorService {
           transaction: [
             {
               type: "credit",
-              description: `hostel puchased `,
+              description: ` hostel puchased `,
               from: canceling.vendorId,
               amount: canceling.totalAmount,
             },
