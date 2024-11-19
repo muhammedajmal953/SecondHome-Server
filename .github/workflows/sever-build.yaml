@@ -27,3 +27,20 @@ jobs:
           context: .
           push: true
           tags: ajmal953/sh-server:latest
+  deploy_to_ec2:
+    name: Deploy to AWS EC2
+    needs: push_to_registry
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH into EC2 instance
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          port: 22
+          script: |
+            docker pull ajmal953/sh-server:latest
+            docker stop autovert-container || true
+            docker rm autovert-container || true
+            docker run -d --name autovert-container -p 80:80 ajmal953/sh-server:latest

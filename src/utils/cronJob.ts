@@ -13,7 +13,7 @@ export const job =new CronJob('16 9 * * *', () => {
             if (err) {
                 console.log('Error deleting log file',err)
             } else {
-                console.log('file deleted Successfully by cronjob running error');  
+                console.log('file deleted Successfully by cronjob  error');  
             }
         })
   }
