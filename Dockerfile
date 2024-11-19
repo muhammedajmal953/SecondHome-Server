@@ -13,6 +13,9 @@ RUN npm install
 # Copy the rest of the application files
 COPY . .
 
+# Copy the .env file into the container (make sure .env exists in the root of your project)
+COPY .env .env
+
 # Build the application (if you're using TypeScript or any build step)
 RUN npm run build
 

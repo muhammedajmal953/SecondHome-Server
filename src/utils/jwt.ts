@@ -5,7 +5,8 @@ import jwt from "jsonwebtoken";
 const secret = process.env.JWT_Secret!;
 
 export const generateToken = (payload: unknown) => {
-
+    console.log('rechead jwt');
+    
     return jwt.sign({ payload: payload },secret,{expiresIn: "1d"});
 };
 
