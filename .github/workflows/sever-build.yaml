@@ -41,6 +41,6 @@ jobs:
           port: 22
           script: |
             docker pull ajmal953/sh-server:latest
-            docker stop autovert-container || true
-            docker rm autovert-container || true
-            docker run -d --name autovert-container -p 80:80 ajmal953/sh-server:latest
+            docker stop ajmal953-container || true
+            docker rm ajmal953-container || true
+            docker run -d --name ajmal953-container -p 80:80 ajmal953/sh-server:latest
