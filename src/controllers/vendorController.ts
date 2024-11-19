@@ -35,8 +35,6 @@ class VendorController {
     const { otp, email } = req.body;
     const registeredUser = await userRepository.findByQuery({ Email: email });
 
-    console.log("otp and email", otp, email);
-
     if (registeredUser && registeredUser.isVerified === true) {
       const result = await this._vendorService.forgotOtpHandler(email, otp);
       
@@ -75,8 +73,6 @@ class VendorController {
     try {
       const { PROVIDER_ID,fcmToken } = req.body;
 
-      console.log("idtoken vendor cntrlr", PROVIDER_ID);
-
       const result = await this._vendorService.singleSignInVendor(PROVIDER_ID,fcmToken);
       return res.status(Status.OK).json(result);
     } catch (error) {
@@ -89,7 +85,6 @@ class VendorController {
   }
   async loginVendor(req: Request, res: Response) {
     try {
-      console.log("logged in body", req.body);
       const user = req.body;
       const result = await this._vendorService.loginVendor(user);
       if (!result?.success) {
@@ -108,8 +103,6 @@ class VendorController {
   async forgotPasswordVendor(req: Request, res: Response) {
     try {
       const { email } = req.body;
-      console.log(email, "dfdfdf");
-
       const result = await this._vendorService.forgotPassword(email.Email);
       return res.status(Status.OK).json(result);
     } catch (error) {
@@ -156,8 +149,7 @@ class VendorController {
       const token = bearer.split(" ")[1];
 
       if (!token) {
-        console.log("token not found");
-
+        
         return res
           .status(Status.UN_AUTHORISED)
           .json({ success: false, message: "Token not found" });
@@ -184,8 +176,7 @@ class VendorController {
       }
 
       if (!token) {
-        console.log("token not found");
-
+    
         return res
           .status(Status.UN_AUTHORISED)
           .json({ success: false, message: "Token not found" });
@@ -213,8 +204,7 @@ class VendorController {
       const token = bearer.split(" ")[1];
 
       if (!token) {
-        console.log("token not found");
-
+      
         return res
           .status(Status.UN_AUTHORISED)
           .json({ success: false, message: "Token not found" });
@@ -258,9 +248,6 @@ class VendorController {
   async resendOtp(req: Request, res: Response) {
     try {
       const { email } = req.body;
-      console.log(email);
-
-      console.log("vendor resend otp controller reched", email);
 
       if (!email) {
         return res
@@ -294,8 +281,7 @@ class VendorController {
         
 
         if (!token) {
-            console.log("token not found");
-    
+          
             return res
               .status(Status.UN_AUTHORISED)
               .json({ success: false, message: "Token not found" });
@@ -324,7 +310,6 @@ class VendorController {
         
 
         if (!token) {
-            console.log("token not found");
     
             return res
               .status(Status.UN_AUTHORISED)
@@ -343,8 +328,6 @@ class VendorController {
  async conformCancel(req: Request, res: Response) {
     try {
       const bookingId = req.query.id
-     console.log('id ',bookingId);
-     
       if (!bookingId) {
         return res.status(Status.BAD_REQUEST).json({message:'Bad request'})
       }

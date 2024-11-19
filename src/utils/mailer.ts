@@ -62,7 +62,6 @@ const sendMail = async (sender: string, subject: string, to: string, body: strin
     return info.messageId
 }
  console.log('Hello World');
- 
 
 export default sendMail
     

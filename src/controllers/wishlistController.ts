@@ -10,25 +10,17 @@ export class WishlistController {
     try {
       const { id } = req.body;
 
-        const token = req.headers.authorization?.split(" ")[1];
-    
+      const token = req.headers.authorization?.split(" ")[1];
 
       if (!token) {
-        console.log("User token not provided");
         return res
           .status(Status.UN_AUTHORISED)
           .json({ message: "Unautherised:no access token provided" });
       }
 
-        const payload = verifyToken(token!); 
-        
- 
-        
+      const payload = verifyToken(token!);
 
-        const userId = (JSON.parse(JSON.stringify(payload)).payload)._id;
-        
-        console.log(userId);
-        
+      const userId = JSON.parse(JSON.stringify(payload)).payload._id;
 
       const result = await this._wishlistServices.addToWish(userId, id);
 
@@ -53,7 +45,6 @@ export class WishlistController {
       const token = req.headers.authorization?.split(" ")[1];
 
       if (!token) {
-        console.log("User token not provided");
         return res
           .status(Status.UN_AUTHORISED)
           .json({ message: "Unautherised:no access token provided" });
@@ -63,53 +54,58 @@ export class WishlistController {
 
       const userId = JSON.parse(JSON.stringify(payload)).payload._id;
 
-        const result = await this._wishlistServices.getAllWishList(Number(page), userId)
-        
-        if (!result || !result.success) {
-            return res.status(Status.NOT_FOUND).json(result)
-        }
+      const result = await this._wishlistServices.getAllWishList(
+        Number(page),
+        userId
+      );
 
-        return res.status(Status.OK).json(result)
+      if (!result || !result.success) {
+        return res.status(Status.NOT_FOUND).json(result);
+      }
+
+      return res.status(Status.OK).json(result);
     } catch (error) {
-        console.error("Error in wishlishController.getAllWishlist", error);
+      console.error("Error in wishlishController.getAllWishlist", error);
 
       return res.status(Status.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: "fetch wish list failed",
       });
     }
-    }
-    
-    async removeWishlist(req: Request, res: Response) {
-        try {
-            const { id } = req.body;
+  }
 
-            const token = req.headers.authorization?.split(" ")[1];
-      
-            if (!token) {
-              console.log("User token not provided");
-              return res
-                .status(Status.UN_AUTHORISED)
-                .json({ message: "Unautherised:no access token provided" });
-            } 
-      
-            const payload = verifyToken(token!);
-      
-            const userId = JSON.parse(JSON.stringify(payload)).payload._id;
-            const result = await this._wishlistServices.removeFromWishList(userId, id)
-            
-            if (!result || !result.success) {
-                return res.status(Status.NOT_FOUND).json(result)
-            }
-    
-            return res.status(Status.OK).json(result)
-        } catch (error) {
-            console.error("Error in wishlishController.removeWishlist", error);
+  async removeWishlist(req: Request, res: Response) {
+    try {
+      const { id } = req.body;
 
-            return res.status(Status.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                message: "add to wishlist failed",
-            });
-        }
+      const token = req.headers.authorization?.split(" ")[1];
+
+      if (!token) {
+        return res
+          .status(Status.UN_AUTHORISED)
+          .json({ message: "Unautherised:no access token provided" });
+      }
+
+      const payload = verifyToken(token!);
+
+      const userId = JSON.parse(JSON.stringify(payload)).payload._id;
+      const result = await this._wishlistServices.removeFromWishList(
+        userId,
+        id
+      );
+
+      if (!result || !result.success) {
+        return res.status(Status.NOT_FOUND).json(result);
+      }
+
+      return res.status(Status.OK).json(result);
+    } catch (error) {
+      console.error("Error in wishlishController.removeWishlist", error);
+
+      return res.status(Status.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "add to wishlist failed",
+      });
     }
+  }
 }

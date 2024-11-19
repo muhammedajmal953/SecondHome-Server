@@ -10,8 +10,7 @@ export class BaseRepository <T extends Document> implements IBaseRepository<T>{
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async findAll(filter: Record<string, unknown>, skip: number, sort:any,limit: number = 5): Promise<T[]> {
         try {
-            if (sort) {
-                console.log(sort);               
+            if (sort) {             
                 return await this._model.find(filter).sort(sort ).skip(skip).limit(limit);
             }
             return await this._model.find(filter).skip(skip).limit(limit);

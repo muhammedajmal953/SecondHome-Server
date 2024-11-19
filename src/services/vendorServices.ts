@@ -44,8 +44,6 @@ export class VendorService implements IVendorService {
         data: null,
       };
     }
-    console.log("reach the service");
-
     if (!user.First_name && user.First_name.length <= 5) {
       return {
         success: false,

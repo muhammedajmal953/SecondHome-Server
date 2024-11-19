@@ -61,8 +61,6 @@ export class AdminController {
       const { searchQuery } = req.query;
       const name = searchQuery as string;
 
-      console.log("get all Users search query", searchQuery);
-
       const result = await this._adminService.getAllVendors(
         name,
         newPage,
@@ -119,7 +117,6 @@ export class AdminController {
           .json({ success: false, message: "Token is required" });
       }
 
-      console.log("Unblocking user with token:", token);
       const result = await this._adminService.unBlockUser(token);
 
       if (!result) {

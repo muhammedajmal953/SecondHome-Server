@@ -192,9 +192,8 @@ export class HostelController {
   async editHostel(req: Request, res: Response) {
     try { 
       const { id } = req.params
-      console.log('photos from req.files hostel edit',req.files);
-      
-      const photos = req.files as Express.Multer.File[];
+    
+    const photos = req.files as Express.Multer.File[];
       const formdata = req.body;
       
       if (!formdata) {
@@ -204,9 +203,6 @@ export class HostelController {
         });
       }
       
-      console.log('recieved');
-      
-
       const result = await this._hostelService.editHostle(id, photos, formdata)
 
       if (!result || !result.success) {

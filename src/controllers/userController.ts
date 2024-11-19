@@ -12,7 +12,6 @@ class UserController {
   async createUser(req: Request, res: Response) {
     try {
       const newUser = req.body;
-        console.log('fcm token from userToken from the ',newUser.fcmToken)      
       const result = await this._userService.createUser(newUser);
 
       if (!result.success) {
@@ -21,7 +20,6 @@ class UserController {
 
       return res.status(Status.CREATED).json(result);
     } catch (error) {
-      
       console.error("Error creating user:", error);
       return res.status(Status.INTERNAL_SERVER_ERROR).json({
         success: false,
@@ -31,67 +29,73 @@ class UserController {
   }
 
   async verifyUser(req: Request, res: Response) {
-   try {
-     const {  email,otp } = req.body;
-     
-     
-     if(!otp||!email) return res.status(Status.BAD_REQUEST).json({message:'Email and OTP required'})
+    try {
+      const { email, otp } = req.body;
 
-     const registeredUser = await userRepository.findByQuery({ Email: email });
-     
-    
+      if (!otp || !email)
+        return res
+          .status(Status.BAD_REQUEST)
+          .json({ message: "Email and OTP required" });
 
-    if (registeredUser && registeredUser.isVerified === true) {
-      const result = await this._userService.forgotOtpHandle(email, otp);
+      const registeredUser = await userRepository.findByQuery({ Email: email });
+
+      if (registeredUser && registeredUser.isVerified === true) {
+        const result = await this._userService.forgotOtpHandle(email, otp);
+
+        if (result?.success) {
+          return res.status(Status.OK).json(result);
+        }
+
+        if (
+          result?.message === "invalid Otp" ||
+          result?.message === "OTP expired"
+        ) {
+          return res.status(Status.NOT_FOUND).json(result);
+        }
+
+        return res.status(Status.BAD_REQUEST).json({
+          success: false,
+          message: result?.message || "Verification failed",
+        });
+      }
+
+      const result = await this._userService.verifyUser(otp, email);
 
       if (result?.success) {
         return res.status(Status.OK).json(result);
       }
-    
-      if (result?.message === 'invalid Otp' || result?.message === 'OTP expired') {
-        return res.status(Status.NOT_FOUND).json(result)
+
+      if (
+        result?.message === "invalid Otp" ||
+        result?.message === "OTP expired"
+      ) {
+        return res.status(Status.NOT_FOUND).json(result);
       }
 
       return res.status(Status.BAD_REQUEST).json({
         success: false,
         message: result?.message || "Verification failed",
       });
-
-     }
-     
-     const result = await this._userService.verifyUser(otp, email);
-     
-     
-     if (result?.success) {
-      return res.status(Status.OK).json(result);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      return res.status(Status.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Internal Server Error",
+      });
     }
-  
-    if (result?.message === 'invalid Otp' || result?.message === 'OTP expired') {
-      return res.status(Status.NOT_FOUND).json(result)
-    }
-
-    return res.status(Status.BAD_REQUEST).json({
-      success: false,
-      message: result?.message || "Verification failed",
-    });
-
-   } catch (error) {
-    console.error("Error creating user:", error);
-    return res.status(Status.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: "Internal Server Error",
-    });
-   }
   }
 
   async singleSignIn(req: Request, res: Response) {
     try {
-      const { PROVIDER_ID,fcmToken } = req.body;
-      const result = await this._userService.singleSignIn(PROVIDER_ID,fcmToken);
+      const { PROVIDER_ID, fcmToken } = req.body;
+      const result = await this._userService.singleSignIn(
+        PROVIDER_ID,
+        fcmToken
+      );
 
       if (!result?.success) {
-        console.error(result?.message)
-        return res.status(Status.BAD_REQUEST).json(result)
+        console.error(result?.message);
+        return res.status(Status.BAD_REQUEST).json(result);
       }
 
       return res.status(Status.OK).json(result);
@@ -116,7 +120,7 @@ class UserController {
       console.log(error);
       return res.status(Status.INTERNAL_SERVER_ERROR).json({
         success: false,
-        message: 'Internal Server error',
+        message: "Internal Server error",
         data: null,
       });
     }
@@ -125,14 +129,13 @@ class UserController {
   async forgotPassword(req: Request, res: Response) {
     try {
       const { email } = req.body;
-
-      console.log("email forgot", email);
-
       const result = await this._userService.forgotPassword(email.Email);
       return res.status(Status.OK).json(result);
     } catch (error) {
       console.error(error);
-      return res.status(Status.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Internal server error' });
+      return res
+        .status(Status.INTERNAL_SERVER_ERROR)
+        .json({ success: false, message: "Internal server error" });
     }
   }
 
@@ -145,7 +148,9 @@ class UserController {
       return res.status(Status.OK).json(result);
     } catch (error) {
       console.log(error);
-      return res.status(Status.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Internal server error' });
+      return res
+        .status(Status.INTERNAL_SERVER_ERROR)
+        .json({ success: false, message: "Internal server error" });
     }
   }
 
@@ -159,7 +164,9 @@ class UserController {
       return res.status(Status.OK).json(result);
     } catch (error) {
       console.log(error);
-      return res.status(Status.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Internal server error' });
+      return res
+        .status(Status.INTERNAL_SERVER_ERROR)
+        .json({ success: false, message: "Internal server error" });
     }
   }
 
@@ -169,17 +176,12 @@ class UserController {
       const token = bearer.split(" ")[1];
 
       const data = req.body;
-
-      console.log("asdfasdf", req.body);
-
       let file: Express.Multer.File;
       if (req.file) {
         file = req.file;
       }
 
       if (!token) {
-        console.log("token not found");
-
         return res
           .status(Status.UN_AUTHORISED)
           .json({ success: false, message: "Token not found" });
@@ -189,7 +191,9 @@ class UserController {
       return res.status(Status.OK).json(result);
     } catch (error) {
       console.error(error);
-      return res.status(Status.INTERNAL_SERVER_ERROR).json({ success: false, message: error });
+      return res
+        .status(Status.INTERNAL_SERVER_ERROR)
+        .json({ success: false, message: error });
     }
   }
 
@@ -205,18 +209,14 @@ class UserController {
         });
       }
 
-      console.log('sefd');
-      
       const bearer = req.headers.authorization!;
       const token = bearer.split(" ")[1];
 
       if (!token) {
-        return res
-          .status(Status.UN_AUTHORISED)
-          .json({
-            success: false,
-            message:'Unauthorised: access denined '
-        })
+        return res.status(Status.UN_AUTHORISED).json({
+          success: false,
+          message: "Unauthorised: access denined ",
+        });
       }
 
       const result = await this._userService.newPassWord(data, token);
@@ -238,9 +238,7 @@ class UserController {
           message: "unautherised:no token provided",
         });
       }
-      console.log(refreshToken);
-      
-      const result =await this._userService.refreshToken(refreshToken);
+      const result = await this._userService.refreshToken(refreshToken);
       return res.status(Status.OK).json(result);
     } catch (error: unknown) {
       console.error("Error in VendorController.refreshToken:", error);
@@ -249,19 +247,21 @@ class UserController {
           error.message === "Token expired" ||
           error.name === "Token verification failed"
         ) {
-          res.status(Status.UN_AUTHORISED).json({ message: "Unauthorized: Token expired" });
+          res
+            .status(Status.UN_AUTHORISED)
+            .json({ message: "Unauthorized: Token expired" });
           return;
         }
       }
-      res.status(Status.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
+      res
+        .status(Status.INTERNAL_SERVER_ERROR)
+        .json({ error: "Internal server error" });
     }
   }
 
   async resendOtp(req: Request, res: Response) {
     try {
       const { email } = req.body;
-      console.log(email);
-
       if (!email) {
         return res
           .status(Status.UN_AUTHORISED)
@@ -274,7 +274,9 @@ class UserController {
       console.error("Error in user resend otp controler:", error);
       if (error instanceof Error) {
         if (error.message === "NO User Found") {
-          res.status(Status.UN_AUTHORISED).json({ message: "Unauthorized: Email not valid" });
+          res
+            .status(Status.UN_AUTHORISED)
+            .json({ message: "Unauthorized: Email not valid" });
           return;
         }
       }
@@ -290,20 +292,19 @@ class UserController {
       const bearer = req.headers.authorization!;
       const token = bearer.split(" ")[1];
 
-      const result = await this._userService.getUserWallet(token)
+      const result = await this._userService.getUserWallet(token);
       if (!result.success) {
-        return res.status(Status.NOT_FOUND).json(result)
+        return res.status(Status.NOT_FOUND).json(result);
       }
-      
-      return res.status(Status.OK).json(result)
+
+      return res.status(Status.OK).json(result);
     } catch (error) {
       console.log(error);
-      return res.status(Status.INTERNAL_SERVER_ERROR).json({message:'internal server error'})
-      
+      return res
+        .status(Status.INTERNAL_SERVER_ERROR)
+        .json({ message: "internal server error" });
     }
   }
 }
-
-
 
 export default UserController;

@@ -124,10 +124,6 @@ export class HostelService implements IHostelService {
         }
       }
    
-
-      console.log('final object',filterObject);
-      
-
       filter.isActive = true;
       const hostels = await this._hostelRepository.findAll(filter, skip,query);
       for (const hostel of hostels) {
@@ -265,28 +261,14 @@ export class HostelService implements IHostelService {
   ): Promise<IResponse> {
     try {
       let uploadedStrings: string[] = (formdata.existingPhotos as string).split(',') as string[];
-
-      console.log('existing photos',photos.length);
-      
-
-      // if (true) {
-      //   console.log(formdata);
-      //   return {
-      //     success: false,
-      //     message:''
-      //   }
-      // }
-      
+    
 
       if (photos) {  
         for (const file of photos) {
-          console.log('inside the edit hostel file');
+         
           
           
           if (file) {
-
-            console.log('upload edit hostel',file);
-            
             const bucketName = process.env.AWS_S3_BUCKET_NAME!;
             const key = `upload/${Date.now()}-${file.originalname}`;
             const fileBuffer = file.buffer;

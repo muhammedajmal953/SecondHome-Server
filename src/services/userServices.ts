@@ -38,8 +38,6 @@ export class UserService implements IUserSrvice{
         data: null,
       };
     }
-
-    console.log('userform from the user singnup',user);
     
     const salt = bcrypt.genSaltSync(10);
     const Password: string = user.Password;
@@ -141,8 +139,7 @@ export class UserService implements IUserSrvice{
       const user = await this._userRepository.findByQuery({ Email: email });
 
       if (!user) {
-        console.log("user not found");
-
+      
         return {
           success: false,
           message: "Something went wrong",
@@ -181,7 +178,6 @@ export class UserService implements IUserSrvice{
         idToken,
         audience: process.env.GOOGLE_CLIENT_ID,
       });
-      console.log("single sign in servisce");
 
       const payload = ticket.getPayload();
 
@@ -320,9 +316,7 @@ export class UserService implements IUserSrvice{
 
       const token = generateToken(userExist);
       const refreshToken = generateRefreshToken(userExist);
-
-      console.log('user fcm Token',user.fcmToken);
-      
+    
       await this._userRepository.update(userExist._id,{$set:{fcmToken:user.fcmToken}})
       
       return { 
@@ -344,11 +338,8 @@ export class UserService implements IUserSrvice{
   }
   async forgotPassword(email: string) {
     try {
-      console.log("before user service");
-
+   
       const user = await this._userRepository.findByQuery({ Email: email });
-      console.log("email at forgot service", email);
-
       if (!user) {
         return {
           success: false,
@@ -478,7 +469,6 @@ export class UserService implements IUserSrvice{
 
   async getUser(token: string) {
     try {
-      console.log("getUser");
       const payload = verifyToken(token);
 
       const id = JSON.parse(JSON.stringify(payload)).payload;
@@ -593,8 +583,6 @@ export class UserService implements IUserSrvice{
 
       const id = JSON.parse(JSON.stringify(payload)).payload;
 
-      console.log(newPassword);
-
       if (isValidPassword(newPassword) === false) {
         return {
           success: false,
@@ -679,8 +667,6 @@ export class UserService implements IUserSrvice{
       const otp = generateOtp();
       sendMail("secondHome", "Resended Otp", email, otp);
       console.log("resend otp", otp);
-      console.log(email);
-
       const otpData = {
         Otp: otp,
         ExpiresAt: new Date(Date.now() + 600000), // Expires in 10 minutes

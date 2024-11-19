@@ -87,9 +87,7 @@ export class BookingController {
     async cancelBooking(req: Request, res: Response) {
         try {
             const { reason } = req.body
-            
-            console.log('controller cancell reason',reason);
-            
+             
             const { id } = req.query
             
             const result = await this._bookingService.cancelBooking(reason, id as string)

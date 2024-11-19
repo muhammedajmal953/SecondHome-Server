@@ -171,9 +171,6 @@ export class BookingService implements IBookingService {
         }
       }
 
-      console.log('data from the order',orderData);
-      
-
       const hostelItem = {
         _id: orderData.hostelId,
         "rates.type": orderData.bedType,
@@ -313,8 +310,6 @@ export class BookingService implements IBookingService {
           meessage:'booking not found'
         }
       }
-
-      console.log('booking details id',booking);
       
       return {
         success: true,

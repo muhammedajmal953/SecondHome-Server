@@ -17,7 +17,6 @@ export class BookingRepository
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getOrderWithAllDetails(id: string): Promise<any> {
-    console.log('repository',id);
     
     return await Booking.aggregate(
       [
