@@ -215,7 +215,8 @@ export class AdminServices implements IAdminService{
     async getAllHostel(page: number, searchQuery: string) {
         try {
           const skip = (page - 1) * 5;
-    
+            console.log(skip);
+            
           const filter: { [key: string]: unknown } = {};
     
           if (searchQuery) {
