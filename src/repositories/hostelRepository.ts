@@ -27,6 +27,15 @@ export class HostelRepository
           },
         },
         {
+          $lookup: {
+            from:"reviews",
+            localField: '_id',
+            foreignField: 'hostelId',
+            as:"reviews"
+          }
+        },
+
+        {
           $unwind: "$owner",
         },
       ]);
@@ -52,10 +61,9 @@ export class HostelRepository
 
   async getallHostel() {
     try {
-      return Hostel.find()
+      return Hostel.find();
     } catch (error) {
       console.log(error);
-      
     }
   }
 }

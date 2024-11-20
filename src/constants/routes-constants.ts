@@ -35,7 +35,9 @@ export const USER_ROUTES = {
   GET_BOOKINGS: '/get-bookings/:page',
   CANCEL_BOOKING: '/cancel-booking', 
   WALLET_BALANCE: '/wallet-balance',
-  BOOKING_DETAILS:'/bookingDetails/:id'
+  BOOKING_DETAILS: '/bookingDetails/:id',
+  ADD_REVIEW: '/add-review/:id',
+  GET_REVIEWS:'/get-reviews/:id'
 }; 
 
 export const VENDER_ROUTES = {

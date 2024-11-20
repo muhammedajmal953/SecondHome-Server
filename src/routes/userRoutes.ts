@@ -15,12 +15,16 @@ import { WishlistController } from "../controllers/wishlistController";
 import { BookingRepository } from "../repositories/bookingRepository";
 import { BookingService } from "../services/bookingServices";
 import { BookingController } from "../controllers/bookingController";
+import { ReviewRepository } from "../repositories/reviewRepository";
+import { ReviewService } from "../services/reviewService";
+import { ReviewController } from "../controllers/reviewController";
 
 const userRepository = new UserRepository();
 const otpRepository = new OtpRepository();
 const wishlistRepository = new WishlistRepository();
 const hostelRepository = new HostelRepository()
-const bookingRepository=new BookingRepository()
+const bookingRepository = new BookingRepository()
+const reviewRepository=new ReviewRepository()
 
 const userService = new UserService(userRepository, otpRepository);
 const userController = new UserController(userService);
@@ -33,9 +37,12 @@ const wishlistServices = new WishlistServices(wishlistRepository, hostelReposito
 const wishlistController=new WishlistController(wishlistServices)
 
 //booking service and controller
-
 const bookingServices = new BookingService(bookingRepository, hostelRepository)
-const bookingController=new BookingController(bookingServices)
+const bookingController = new BookingController(bookingServices)
+
+//review service and controller
+const reviewService = new ReviewService(reviewRepository)  
+const reviewController = new ReviewController(reviewService)  
 
 
 const userRouter = Router();
@@ -82,7 +89,11 @@ userRouter.put(USER_ROUTES.CANCEL_BOOKING, userAuth, bookingController.cancelBoo
 userRouter.get(USER_ROUTES.WALLET_BALANCE, userAuth, userController.walletBalance.bind(userController))
 
 
-userRouter.get(USER_ROUTES.BOOKING_DETAILS,userAuth,bookingController.getBooking.bind(bookingController))
+userRouter.get(USER_ROUTES.BOOKING_DETAILS, userAuth, bookingController.getBooking.bind(bookingController))
+
+//review adding
+userRouter.post(USER_ROUTES.ADD_REVIEW,userAuth,reviewController.addReview.bind((reviewController)))
+userRouter.get(USER_ROUTES.GET_REVIEWS,userAuth,reviewController.getReview.bind((reviewController)))
 
 
  

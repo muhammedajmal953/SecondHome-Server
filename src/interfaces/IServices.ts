@@ -75,3 +75,9 @@ export interface IBookingService{
   
   saveBooking(orderData:IOrder):Promise<IResponse>
 }
+
+export interface IReviewService{
+  addReview(reviewData: Record<string, unknown>, userId: string, hostelId: string): Promise<IResponse>
+  
+  getReview(hostelId:string):Promise<IResponse>
+}
