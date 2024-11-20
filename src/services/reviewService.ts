@@ -7,7 +7,12 @@ export class ReviewService implements IReviewService{
     constructor(private _reviewRepository:ReviewRepository) { }
     
     async addReview(reviewData: Record<string, unknown>, userId: string, hostelId: string){
-     try {
+        try {
+         
+            const { rating, review } = reviewData
+         
+            console.log('review details',rating,review);
+            
          const exitstigReview = await this._reviewRepository.findByQuery({ hostelId })
          if (!exitstigReview) {
               await this._reviewRepository.create({
@@ -26,6 +31,8 @@ export class ReviewService implements IReviewService{
                  data:reviews
              }
          }
+
+        
 
          exitstigReview.reviews.push({
             review: reviewData.review as string,

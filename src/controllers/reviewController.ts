@@ -11,9 +11,6 @@ export class ReviewController{
            const { userId } = req.query
            const { reviewData } = req.body
 
-           console.log(reviewData);
-           
-
            if (!id||!userId) {
                return res.status(Status.BAD_GATEWAY).json({message:'Bad Gate Hostel'})
            }
