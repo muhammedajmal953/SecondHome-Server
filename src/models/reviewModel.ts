@@ -10,7 +10,7 @@ const reviewModel = new Schema<IReviews>({
             type: Date,
            default:new Date()
         },
-        rate:String
+        rating:Number
     }]
 })
 

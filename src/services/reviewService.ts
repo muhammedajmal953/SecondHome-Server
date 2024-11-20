@@ -18,8 +18,8 @@ export class ReviewService implements IReviewService{
               await this._reviewRepository.create({
                  hostelId,
                  reviews: [{
-                     review: reviewData.review as string,
-                     rating: reviewData.rating as number,
+                     review: review as string,
+                     rating: rating as number,
                      userId: userId,
                      createdAt:new Date()
                  }]
@@ -35,8 +35,8 @@ export class ReviewService implements IReviewService{
         
 
          exitstigReview.reviews.push({
-            review: reviewData.review as string,
-            rating: reviewData.rating as number,
+            review: review as string,
+            rating: rating as number,
             userId: userId,
             createdAt:new Date()
          })
