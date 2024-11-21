@@ -66,7 +66,10 @@ venderRouter.put(VENDER_ROUTES.CONFIRM_CANCEL,vendorAuth,vendorController.confor
  
 venderRouter.get(VENDER_ROUTES.WALLET_BALANCE, vendorAuth, vendorController.walletBalance.bind(vendorController))
 
-venderRouter.get(VENDER_ROUTES.BOOKING_DETAILS,vendorAuth,bookingController.getBooking.bind(bookingController))
+venderRouter.get(VENDER_ROUTES.BOOKING_DETAILS, vendorAuth, bookingController.getBooking.bind(bookingController))
+
+venderRouter.put(VENDER_ROUTES.DELETE_HOSTEL,vendorAuth,hostelController.blockHostel.bind(hostelController))
+venderRouter.put(VENDER_ROUTES.UN_DELETE,vendorAuth,hostelController.unBlockHostel.bind(hostelController))
 
 
 export default venderRouter; 

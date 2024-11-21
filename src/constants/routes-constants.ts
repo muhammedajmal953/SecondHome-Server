@@ -60,5 +60,7 @@ export const VENDER_ROUTES = {
   SHOW_BOOKINGS: '/get-bookings/:page',
   CONFIRM_CANCEL: '/confirm-cancel',
   WALLET_BALANCE: '/wallet-balance',
-  BOOKING_DETAILS:'/bookingDetails/:id'
+  BOOKING_DETAILS: '/bookingDetails/:id',
+  DELETE_HOSTEL: '/deleteHostel',
+  UN_DELETE:'/unDeleteHostel'
 };
