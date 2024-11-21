@@ -18,6 +18,8 @@ job.start();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+console.log('front end url', process.env.frontEnd_URL);
+
 app.use(
   cors({
     origin: process.env.frontEnd_URL,
