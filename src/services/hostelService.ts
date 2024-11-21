@@ -88,9 +88,22 @@ export class HostelService implements IHostelService {
       let query:Record<string,unknown> = {}
 
       if (searchQuery) {
+        searchQuery = searchQuery.trim()
         filter["$or"] = [
           { name: { $regex: searchQuery, $options: "i" } },
           { category: { $regex: searchQuery, $options: "i" } },
+          {
+            address: {
+              $elemMatch: {
+                $or: [
+                  { city: { $regex: searchQuery, $options: "i" } },
+                  { street: { $regex: searchQuery, $options: "i" } },
+                  { state: { $regex: searchQuery, $options: "i" } },
+                  { country: { $regex: searchQuery, $options: "i" } }
+                ]
+              }
+            }
+          }
         ];
       }
 
