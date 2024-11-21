@@ -102,7 +102,7 @@ export class HostelService implements IHostelService {
           { "address.state": { $regex: searchQuery, $options: "i" } },
           { "address.district": { $regex: searchQuery, $options: "i" } },
           { description: { $regex: searchQuery, $options: "i" } },
-          { facilities: { $regex: searchQuery, $options: "i" } }, // Match in array of strings
+          { facilities: { $regex: searchQuery, $options: "i" } }, 
           { nearbyPlaces: { $regex: searchQuery, $options: "i" } },
         ];
       }
