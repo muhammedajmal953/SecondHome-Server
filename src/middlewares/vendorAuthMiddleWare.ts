@@ -32,6 +32,6 @@ export const vendorAuth=(req: Request,res:Response,next:NextFunction)=>{
                 return res.status(Status.UN_AUTHORISED).json({ message: 'Unauthorized: Token expired' });
             }
         }
-        return res.status(Status.FORBIDDEN).json({ message: 'Forbidden: Invalid token' }); 
+        return res.status(Status.FORBIDDEN).json({ message: 'Please login' }); 
     }
 }
