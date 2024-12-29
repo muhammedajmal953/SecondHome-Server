@@ -312,6 +312,9 @@ class UserController {
         success: true,
         message: 'token valid'
       }
+
+      console.log(result.message);
+      
       return res.status(Status.OK).json(result)
     } catch (error) {
       console.log('Error adminController.token validate', error)
