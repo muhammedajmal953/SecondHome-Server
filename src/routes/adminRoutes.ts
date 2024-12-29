@@ -79,10 +79,10 @@ adminRouter.get(
   adminController.getAllBooking.bind(adminController)
 )
 
-
 adminRouter.get(
-  Admin_Routes.TOKEN_VALIDATE,
+  Admin_Routes.GET_ALL_DATAS,
   adminAuth,
-  adminController.tokenValidate.bind(adminController)
+  adminController.getAllDatas.bind(adminController)
 )
+
 export default adminRouter;
