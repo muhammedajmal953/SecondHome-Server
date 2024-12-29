@@ -39,7 +39,8 @@ export class HostelRepository
           $unwind: "$owner",
         },
       ]);
-
+      console.log(result);
+      
       return result[0];
     } catch (error) {
       console.error("Error fetching record by ID:", error);
