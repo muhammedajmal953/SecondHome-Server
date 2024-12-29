@@ -94,7 +94,6 @@ userRouter.get(USER_ROUTES.BOOKING_DETAILS, userAuth, bookingController.getBooki
 //review adding
 userRouter.post(USER_ROUTES.ADD_REVIEW,userAuth,reviewController.addReview.bind((reviewController)))
 userRouter.get(USER_ROUTES.GET_REVIEWS,userAuth,reviewController.getReview.bind((reviewController)))
-userRouter.get(USER_ROUTES.TOKEN_VALIDATE,userAuth,userController.tokenValidate.bind((userController)))
 
 
  
