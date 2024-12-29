@@ -215,6 +215,9 @@ export class HostelService implements IHostelService {
 
   async getHostel(id: string): Promise<IResponse> {
     try {
+
+      console.log('id of the hostel',id);
+      
       const hostel = await this._hostelRepository.findById(id);
 
       if (!hostel) {
