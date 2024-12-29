@@ -176,6 +176,9 @@ export class HostelController {
           .status(Status.BAD_REQUEST)
           .json({success:false,message:'Hostel id Required'})
       }
+
+      console.log('id of the hostel',id);
+      
       const result = await this._hostelService.getHostelWithOwner(id)
 
       if (!result) {
