@@ -10,7 +10,8 @@ export const Admin_Routes = {
   BLOCK_HOSTEL: "/blockHostel",
   UNBLOCK_HOSTEL: "/unBlockHostel",
   GET_ALL_BOOKINGS: "/getAllBookings/:page",
-  GET_ALL_DATAS:"/admin-dashboard"
+  GET_ALL_DATAS: "/admin-dashboard",
+  TOKEN_VALIDATE:"token-validate"
 };
 
 export const USER_ROUTES = {
@@ -37,7 +38,8 @@ export const USER_ROUTES = {
   WALLET_BALANCE: '/wallet-balance',
   BOOKING_DETAILS: '/bookingDetails/:id',
   ADD_REVIEW: '/add-review/:id',
-  GET_REVIEWS:'/get-reviews/:id'
+  GET_REVIEWS: '/get-reviews/:id',
+  TOKEN_VALIDATE:"token-validate"
 }; 
 
 export const VENDER_ROUTES = {
@@ -62,5 +64,6 @@ export const VENDER_ROUTES = {
   WALLET_BALANCE: '/wallet-balance',
   BOOKING_DETAILS: '/bookingDetails/:id',
   DELETE_HOSTEL: '/deleteHostel',
-  UN_DELETE:'/unDeleteHostel'
+  UN_DELETE: '/unDeleteHostel',
+  TOKEN_VALIDATE:"token-validate"
 };

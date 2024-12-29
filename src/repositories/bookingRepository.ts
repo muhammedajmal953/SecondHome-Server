@@ -30,7 +30,6 @@ export class BookingRepository
           }  
         }, 
           { $unwind: "$hostelDetails" }
-        
       ]
     )
     
@@ -133,7 +132,5 @@ export class BookingRepository
       console.log(error);
     }
   }
-
-
 }
  

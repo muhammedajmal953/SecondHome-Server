@@ -825,6 +825,7 @@ export class VendorService implements IVendorService {
         _id: canceling?.hostelId,
         "rates.type": canceling?.bedType,
       };
+   
 
       const updation = {
         $inc: { "rates.$.quantity": canceling?.numberOfGuests },

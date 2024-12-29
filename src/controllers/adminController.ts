@@ -239,4 +239,17 @@ export class AdminController {
       return res.status(Status.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' })
     }
   }
+
+  async tokenValidate(req: Request, res: Response) {
+    try {
+      const result = {
+        success: true,
+        message:'token valid'
+      }
+      return res.status(Status.OK).json(result)
+    } catch (error) {
+      console.log('Error adminController.token validate', error)
+      return res.status(Status.INTERNAL_SERVER_ERROR).json({ message: 'Internal Server Error' })
+    }
+  }
 }
