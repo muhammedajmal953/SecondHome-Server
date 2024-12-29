@@ -21,7 +21,7 @@ export const adminAuth=(req: Request,res:Response,next:NextFunction)=>{
         if (decoded.Role !== Role.Admin) {
             return res.status(Status.UN_AUTHORISED).json({
                 success: false,
-                message:'You are not an Admin'
+                message:'Please login'
             })
         }
         next()

@@ -21,7 +21,7 @@ export const vendorAuth=(req: Request,res:Response,next:NextFunction)=>{
         if (decoded.Role !== Role.Vendor || !decoded.IsActive) {
             return res.status(Status.UN_AUTHORISED).json({
                 success: false,
-                message:'Access Denined'
+                message:'Please login'
             })
         }
         next()
