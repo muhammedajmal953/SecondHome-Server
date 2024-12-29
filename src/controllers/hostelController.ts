@@ -180,6 +180,9 @@ export class HostelController {
       console.log('id of the hostel',id);
       
       const result = await this._hostelService.getHostelWithOwner(id)
+      
+      console.log('id of the hostel',result.message);
+      
 
       if (!result) {
         return res
