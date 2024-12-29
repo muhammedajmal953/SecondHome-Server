@@ -242,7 +242,6 @@ export class HostelService implements IHostelService {
 
   async getHostelWithOwner(id: string): Promise<IResponse> {
     try {
-      console.log('id of the hostel',id);
       const hostel = await this._hostelRepository.findHostelWIthOwner(id);
       if (!hostel) {
         return {
@@ -259,7 +258,7 @@ export class HostelService implements IHostelService {
           })
         );
       }
-      console.log(hostel);
+      console.log('hostel',hostel);
       
       return {
         success: true,
