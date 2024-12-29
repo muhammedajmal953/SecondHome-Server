@@ -637,6 +637,10 @@ export class UserService implements IUserSrvice{
       const payload = verifyToken(token);
       const decoded = JSON.parse(JSON.stringify(payload)).payload;
 
+      if (!payload || !decoded) {
+        return {success:false,message:"Please Login"}
+    }
+
       const userData = await this._userRepository.findById(decoded._id);
 
       if (!userData) return { success: false, message: "User Not found" };

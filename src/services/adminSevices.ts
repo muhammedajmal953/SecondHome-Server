@@ -195,7 +195,11 @@ export class AdminServices implements IAdminService{
     async refreshToken(token:string) {
         try {
           const payload = verifyToken(token)
-          const decoded = JSON.parse(JSON.stringify(payload)).payload
+            const decoded = JSON.parse(JSON.stringify(payload)).payload
+            
+            if (!payload || !decoded) {
+                return {success:false,message:"Please Login"}
+            }
           
           const userData = await this._userRepository.findById(decoded._id)
           
