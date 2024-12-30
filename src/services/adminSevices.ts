@@ -138,6 +138,18 @@ export class AdminServices implements IAdminService{
 
         user.IsActive = false
         await user.save()
+
+
+        if (user.Role === 'Vendor') {
+            const hostels=await this._hotelRepository.findAll({owner:user._id},0,'',0)
+            if (hostels) {
+                for(const hostel of hostels) {
+                    hostel.isActive = false
+                    await hostel.save()
+                }
+            }
+        }
+
         return {
             success: true,
             message: "User blocked successfully",
@@ -157,6 +169,18 @@ export class AdminServices implements IAdminService{
 
         user.IsActive = true
         await user.save()
+
+
+        if (user.Role === 'Vendor') {
+            const hostels=await this._hotelRepository.findAll({owner:user._id},0,'',0)
+            if (hostels) {
+                for(const hostel of hostels) {
+                    hostel.isActive = true
+                    await hostel.save()
+                }
+            }
+        }
+
         return {
             success: true,
             message: "User blocked successfully",
