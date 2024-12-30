@@ -250,9 +250,6 @@ export class HostelService implements IHostelService {
         };
       }
 
-      console.log('hostel',hostel);
-
-
       if (hostel.photos && hostel.photos.length > 0) {
         hostel.photos = await Promise.all(
           hostel.photos.map(async (url: string) => {
